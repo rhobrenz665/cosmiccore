@@ -1,0 +1,12 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Local machine and tooling output
+.DS_Store
+node_modules/
+.next/
+out/
+coverage/
+*.log
