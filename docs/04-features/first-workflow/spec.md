@@ -15,7 +15,7 @@ Includes sign-in/logout, minimal private dashboard, note CRUD/autosave, collecti
 - Auth: recommended Neon managed Better Auth with Google. Validate its current Next.js SDK, session verification, public OAuth setup, free allowances and deployment configuration before implementation. No auth service is provisioned or approved by this document.
 - Database: app user mapping, notes, collections, tags, note_tags, mutation receipts and bounded usage counters. Use server-only Drizzle services and reviewed migrations; validate driver transaction behavior before choosing APIs.
 - UI: shadcn/ui buttons/forms, AlertDialog for deletion, Dialog/Sheet for import/filtering, DropdownMenu for note actions, Tabs for mobile Edit/Preview. Keep Markdown editing lightweight; no new editor framework without evidence.
-- Operations: private environments, controlled migrations, quota counters and recovery plan. The 24-hour RPO remains a target until a successful restore drill.
+- Operations: private environments, controlled migrations, quota counters and recovery plan. Application-managed backups/disaster recovery are deferred; 24-hour RPO is a future target, not an MVP guarantee.
 
 ## Proposed validation and limits
 
@@ -96,12 +96,16 @@ Proposed measured targets: warm save/search p95 under 1 second on a documented 2
 | WF-15 | Restore before/exactly at/after 7 days | Before succeeds; equality/after fails; owner check always applies |
 | WF-16 | Repeated purge after partial failure | Bounded cleanup; no double budget decrement/dangling sources |
 | WF-17 | Keyboard/mobile/zoom/theme and logout switching | Reachable actions, preserved focus/privacy and no previous account state |
-| WF-18 | Export disconnect, dependency outage, migration/restore | Honest failure state; restore evidence required for RPO claim |
+| WF-18 | Export disconnect, dependency outage, migration failure | Honest failure state; saved-data/export validation; no disaster recovery claim |
 
 Use unit tests for normalization/validation and export filenames; PostgreSQL integration tests for ownership/revision/budget/idempotency races; end-to-end tests for the signed-in journey and critical UI failures. No tests have run because no application exists.
 
 ## Definition of ready and implementation sequence
 
-The feature contracts are reviewable, but auth SDK/limits and transaction driver selection still need verification. Proposed thresholds/ZIP packaging require implementation review. Public release additionally requires global quota values, purge trigger, backup drill, account-deletion policy and deployment eligibility checks. AI availability is not a dependency of this workflow.
+The feature contracts are reviewable, but auth SDK/limits and transaction driver selection still need verification. Proposed thresholds/ZIP packaging require implementation review. Public release additionally requires global quota values, purge trigger, account-deletion policy and deployment eligibility checks. AI availability is not a dependency of this workflow.
 
 Once implementation is explicitly authorized: (1) scaffold selected stack and shared tokens; (2) integrate Google auth/user mapping and isolated database migrations; (3) implement note save/conflict and organization; (4) add search and transfer; (5) implement Trash/purge and run the matrix. Each task gets its own verification; this ordering does not authorize application work.
+
+## Current scope decision — 2026-11-10
+
+Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.

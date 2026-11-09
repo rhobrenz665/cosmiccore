@@ -154,3 +154,120 @@ Status: Approved product targets | Date: 2026-11-10
 - Risks: a $0 backup mechanism is not yet verified; remaining history/account/backup retention and RTO are unresolved.
 - Reconsider when: storage budget, privacy needs or restore tests demonstrate infeasibility.
 - Specification: [retention and recovery](../07-deployment/data-retention-and-recovery.md).
+
+## ADR-004 validation update — 2026-11-10
+
+Status: Proposed (documentation evidence checked). Recommend managed Neon Better Auth with Google-only custom shadcn/ui screen. Supported Next.js/social capabilities fit the slice. Remaining risks: session-cache freshness, production OAuth/domain setup, SMTP applicability and account limits. No additional provider approval inferred. See [validation](../03-technical/auth-integration-validation.md).
+
+## ADR-009: Transaction-capable database driver
+
+- Status: Proposed.
+- Context/problem: note/quota/idempotency transactions require decisions after locked reads.
+- Proposed solution: Neon WebSocket Pool/Client with Drizzle neon-serverless in Node runtime.
+- Alternatives: ordinary pg/TCP; HTTP with deliberately redesigned atomic SQL batches/functions.
+- Benefits: keeps conditional transaction logic explicit and one initial access path.
+- Drawbacks/costs: connection lifecycle, runtime compatibility and compute require testing; no new cloud service.
+- Risks: copying HTTP transaction assumptions or mismatched SDK examples; leaking connections on failure.
+- Reconsider when: runtime tests fail, simpler pg integration proves preferable, or measured read overhead justifies HTTP.
+- Evidence/verification: [integration validation](../03-technical/auth-integration-validation.md).
+
+## Owner decision record — account deletion and backup expiry
+
+Status: Approved product targets | Date: 2026-11-10
+
+- Context: account erasure and backups need explicit, separate retention rules.
+- Decision: block app access immediately after confirmed deletion; target live-data removal within seven days with no recovery grace period. Retain encrypted backups for seven days, then expire them.
+- Alternatives: account recovery grace period; 30-day backup retention.
+- Benefits: immediate privacy boundary and short, explicit retention.
+- Drawbacks/costs: less recovery history; cleanup/expiry/journal operations require reliable execution and storage.
+- Risks: independent $0 backup and provider cleanup are unverified; backups may temporarily retain deleted content until expiry. Restores must reapply later deletion requests.
+- Reconsider when: the owner changes recovery/privacy requirements or feasibility tests cannot meet the targets.
+- Details: [account lifecycle](../03-technical/account-lifecycle.md), [backup plan](../07-deployment/backup-and-cleanup-plan.md).
+
+## Owner decision record — defer backups beyond MVP
+
+Status: Approved scope change | Date: 2026-11-10
+
+- Context: backup hosting remains undecided under the $0 budget; owner chose future scope.
+- Decision: application-managed backups and disaster recovery are outside MVP. Retain 24-hour RPO and seven-day encrypted retention as future targets only.
+- Benefits: removes an operational dependency from MVP delivery.
+- Trade-offs/risks: MVP has no promised disaster-recovery capability; Markdown export and Trash do not replace database backup.
+- Costs: no additional backup service selected or provisioned.
+- Retained MVP work: safe migrations, user export/import, seven-day Trash, account access blocking and live-data deletion cleanup.
+- Reconsider when: the owner starts the backup milestone or changes recovery needs.
+
+## Owner decision record — reference deletion
+
+Status: Approved | Date: 2026-11-10
+
+- Context: note Trash does not establish retention for saved references.
+- Decision: immediate reference removal after confirmation; no reference Trash. Preserve linked notes and remove reference associations/search/retrieval access.
+- Alternative: seven-day reference Trash.
+- Benefits: simple deletion semantics and less retained live data.
+- Drawback: no built-in reference recovery after confirmation.
+- Costs/risks: transactional cleanup and stale-update protection are required; historical generated excerpts are governed separately.
+- Reconsider when: the owner requests reference recovery based on usage.
+
+## Owner direction — optional free hosted and local AI
+
+Status: Approved capability direction; integration Proposed | Date: 2026-11-10
+
+- Context: the owner wants both free online models and their local AI.
+- Direction: optional approved provider adapters, with provider/model recorded per attempt and explicit selection.
+- Alternatives: hosted-only or local-only inference.
+- Benefits: model flexibility and local compute reuse; drawbacks include differing limits, privacy and connectivity.
+- Costs/risks: free API quotas are limited; local hardware uptime/electricity still matter; public access to local compute requires separate secured topology.
+- Reconsider when: selected provider terms/availability or hardware do not satisfy the evaluated workload.
+- Unresolved: runtime/model, intended availability of owner local compute and exact hosted provider/model. [Provider options](../03-technical/ai-provider-options.md) contains current evidence.
+
+## Owner scope refinement — local AI deferred
+
+Status: Approved | Date: 2026-11-10
+
+Ollama with a Qwen ~7B model is the owner's local option (exact tag unknown). Local integration/connectivity is future scope. Focus the initial AI milestone on free online API models; retain the provider adapter seam without building a bridge or local selector. No hosted provider or model is approved by this scope refinement.
+
+## Owner decision record — chat retention and source deletion
+
+Status: Approved | Date: 2026-11-10
+
+- Context: conversation deletion and deletion of its cited sources have distinct effects.
+- Decision: retain chat history until user deletion; confirmed deletion removes it without Trash. Source deletion blocks future retrieval/citation access but leaves existing generated answer text until the conversation is deleted.
+- Alternatives: automatic chat expiry, chat Trash or automatic historical-answer redaction.
+- Benefits: predictable history and simple user-controlled deletion.
+- Drawbacks/risks: historical generated text may retain source information; disclose this distinction. No recovery after chat deletion is offered.
+- Costs: bounded dependent cleanup, storage limits and race protection are still needed.
+- Reconsider when: owner changes privacy/history requirements.
+
+## ADR-010: Initial hosted chat model and switching
+
+- Status: Approved initial planning choice; operational profile Proposed and runtime validation pending.
+- Context: online free-API MVP needs a concrete starting provider with a future switch path.
+- Choice: Groq Free / openai/gpt-oss-20b; evaluate openai/gpt-oss-120b if quality requires it. Keep application-owned provider adapter/configuration.
+- Alternatives: Gemini free under separately verified compatible data terms; other verified free APIs; local Ollama later.
+- Benefits: limited initial integration surface; changeable model without rewriting domain logic or reindexing for chat-only changes.
+- Drawbacks/costs: restrictive shared free-token quotas and external model availability; no measured quality yet.
+- Risks: privacy configuration, reasoning tokens, provider limits and term changes require validation; no automatic paid or cross-provider fallback.
+- Reconsider when: grounded quality, account access or free quota cannot satisfy the pilot.
+- Evidence/conditions: [hosted model selection](../03-technical/hosted-model-selection.md).
+
+## Owner decision record — first visit and account defaults
+
+Status: Approved as specified | Date: 2026-11-10
+
+- First-visit color preference: System, following OS light/dark. Initial Cosmic/Minimal appearance remains unresolved; do not infer Minimal approval.
+- MVP profile: read-only Google-derived fields.
+- Re-registration: a new empty account is allowed only after prior app/provider deletion finishes. No old-data restoration or bypass of pending deletion.
+- Benefits: familiar theme behavior, simple identity management and explicit account lifecycle.
+- Alternatives/trade-offs: fixed light/dark, editable local profile and permanent re-registration ban were not selected. Read-only profile limits customization; fresh registration does not recover deleted data.
+- Risks/costs: system/theme synchronization and identity cleanup races still require verification; operational audit retention remains open.
+- Reconsider when: the owner changes appearance, customization or account-lifecycle requirements.
+
+## Owner decision record — Cosmic default and minimal audit retention
+
+Status: Approved | Date: 2026-11-10
+
+- Decision: Cosmic on first visit, System for light/dark, with the header light/dark button and Minimal option retained.
+- Decision: seven-day app-controlled operational/security metadata retention; no note/chat content or secrets in logs. Detailed implementation remains Proposed.
+- Benefits/trade-offs: recognizable initial visual identity with user control; short debugging window rather than long audit history.
+- Scope: owner requested minimal attention/complexity for retention; no separate audit platform. Actual host/provider retention still requires a practical configuration check.
+- Reconsider only on concrete owner request or implementation constraint.

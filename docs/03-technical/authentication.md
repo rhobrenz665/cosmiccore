@@ -1,6 +1,6 @@
 # Authentication
 
-Status: Draft — specification placeholder
+Status: Draft — integration recommendation validated against documentation
 
 Provider selection remains Proposed; compare managed Neon Auth and self-managed Better Auth before approving integration. No custom password/session cryptography.
 
@@ -23,3 +23,9 @@ Acceptance cases for the upcoming slice: a new Google user can register without 
 ## First workflow specification
 
 See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contracts](../04-features/first-workflow/contracts.md) for Proposed request/result shapes, data invariants, validation, concurrency, transfer behavior and acceptance scenarios. Provider SDK/configuration remains subject to verification; these documents do not provision or implement auth.
+
+## Validated integration recommendation
+
+See [auth integration validation](auth-integration-validation.md) for the current managed Better Auth/Google recommendation, callback/session constraints, free-plan evidence and unresolved production requirements. Google-only shadcn/ui sign-in is proposed; no provider has been provisioned.
+
+Account-status blocking and deletion/session requirements are detailed in [account lifecycle](account-lifecycle.md). Provider session caching must not bypass app-level deletion status.

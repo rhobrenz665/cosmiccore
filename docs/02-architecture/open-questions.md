@@ -51,3 +51,7 @@ Owner confirmed separate private accounts and Google sign-in. Notes, references,
 | Auth/preview configuration | Separate environments and callback/origin verification |
 
 Decisions remain Proposed until the owner's answers are recorded in [the decision register](architecture-decisions.md).
+
+## Current scope decision — 2026-11-10
+
+Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.

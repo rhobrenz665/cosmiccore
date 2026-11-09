@@ -15,3 +15,13 @@ Provisional layout breakpoints: below 768px single column, 768–1023px collapsi
 ## Reference-informed refinement
 
 See [reference review](reference-review.md) and [screen blueprints](wireframes/README.md). The owner explicitly treats supplied images as enhanceable references. Keep Cosmic decoration away from dense reading surfaces; use a compact appearance control rather than repeated toolbars. Deferred features depicted in images do not enter MVP scope. Exact tokens and responsive visual output remain to be validated.
+
+## Quick light/dark switch — 2026-11-10
+
+Owner requested a button to switch light/dark. Add one accessible shared-header button on desktop/mobile. First visit still follows System. Proposed interaction: resolve the current theme, then a click selects its opposite explicitly (light → dark, dark → light). Subsequent clicks alternate the explicit preference. Appearance settings retain Light/Dark/System so users can resume following the OS; Cosmic/Minimal is a separate control and is unaffected.
+
+Use a shadcn/ui Button and decorative Lucide icon with a dynamic accessible action label (Switch to light mode / Switch to dark mode). Keyboard activation and visible focus must work. Show the current preference in settings so overriding System is understandable. For saved accounts, persist through the existing preference mutation with saving/failure handling; a failed save must not claim persisted success. No new theme framework or duplicated page tree is implied. Exact placement/style remains a visual refinement; no application code has been created.
+
+## Approved first-visit defaults — 2026-11-10
+
+Start in Cosmic appearance with System light/dark preference. The header light/dark button can set an explicit color preference; Appearance settings can return to System or select Minimal. This resolves the initial visual-style choice.

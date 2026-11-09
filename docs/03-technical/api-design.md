@@ -27,3 +27,11 @@ Cookie-authenticated writes require trusted-origin/CSRF handling appropriate to 
 ## First workflow specification
 
 See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contracts](../04-features/first-workflow/contracts.md) for Proposed request/result shapes, data invariants, validation, concurrency, transfer behavior and acceptance scenarios. Provider SDK/configuration remains subject to verification; these documents do not provision or implement auth.
+
+## References and Dashboard contracts
+
+[References](../04-features/references/spec.md) defines Proposed create/update/delete/search service inputs, revision checks and owner-only DUPLICATE_REFERENCE errors. Its immediate-removal-after-confirmation policy was approved on 2026-11-10. [Dashboard](../04-features/dashboard/spec.md) defines bounded getDashboard region results; no dashboard-specific public REST endpoint or analytics table is needed. All calls use the existing session/active-account context.
+
+## Detailed grounded-chat baseline
+
+See [AI Chat specification](../04-features/ai-chat/spec.md) and [chat contracts](../04-features/ai-chat/contracts.md) for Proposed source mapping, request/stream/persistence behavior, concurrency/quota reservations and acceptance tests. Online free-API models are current scope; local Ollama/Qwen integration remains future scope. Provider/model, history-retention policies and runtime quality remain unresolved.
