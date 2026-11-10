@@ -43,3 +43,27 @@ Anyone can register with Google. Public registration and commercial use are sepa
 The [Neon pricing page](https://neon.com/pricing) lists Managed Better Auth in its free offering. This confirms availability, not unlimited authentication or all production requirements: account-specific auth limits and OAuth configuration still need checking. The managed auth recommendation reduces operating tasks, while the app remains responsible for authorization.
 
 Recommendation: launch with bounded storage/writes and AI disabled until verified free inference is available. Reason: public users can exhaust a private developer's free allowances. Trade-offs: users may encounter quotas and AI may be unavailable; no new paid service is added. MVP impact: a knowledge-only pilot can precede the full AI MVP, with the distinction disclosed.
+
+## Auth validation checkpoint
+
+[Auth integration validation](../03-technical/auth-integration-validation.md) records refreshed official auth allowances and remaining account-specific checks, plus the SMTP applicability issue for Google-only production. No $0 production guarantee is established by an available free tier. Backup feasibility remains independent.
+
+## Lifecycle and maintenance planning
+
+See [account lifecycle](../03-technical/account-lifecycle.md) for Proposed deletion/history policies, and [backup/cleanup feasibility](backup-and-cleanup-plan.md) for validated tool capabilities and remaining operational gaps. Immediate logical expiry is distinct from delayed physical purge. The 24-hour RPO remains unverified until the backup/restore workflow is tested.
+
+## Current scope decision — 2026-11-10
+
+Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.
+
+## Optional hosted/local AI direction — 2026-11-10
+
+Owner requested optional free online models and their local AI. Provider flexibility includes both modes, with exact runtime/model and hosted-to-local connectivity still unresolved. See [provider options](../03-technical/ai-provider-options.md) for trust boundaries, candidate evidence, $0 constraints and privacy requirements. No silent provider/paid fallback, arbitrary endpoint entry or public exposure of local inference is approved. Earlier development-only local assumptions are superseded by this capability request; deployment topology remains to be chosen.
+
+## Latest owner scope — 2026-11-10
+
+Confirmed local runtime: Ollama with a Qwen model of approximately 7B parameters; exact model tag/quantization not specified. Local AI integration is explicitly deferred to a future milestone. Current AI work focuses on online models with free API access. Do not expose the owner's machine, create a bridge or include a local selector in the initial MVP. Hosted provider/model remains Proposed until quality, privacy and free-quota verification. This update supersedes pending questions about local availability for the current milestone.
+
+## Initial hosted inference choice
+
+[Hosted selection](../03-technical/hosted-model-selection.md) records Groq Free GPT-OSS 20B, actual documented Free-limit evidence and proposed pilot ceilings. Published request limits do not establish full-context chat capacity; shared token limits dominate. No billing upgrade, gateway credits or automatic paid fallback is authorized.

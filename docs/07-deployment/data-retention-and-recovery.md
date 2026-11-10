@@ -30,3 +30,19 @@ Define recovery time objective (RTO), backup retention/encryption/access, and au
 6. An isolated restore drill demonstrates a recoverable point no more than 24 hours old; a missed target is reported and blocks claiming RPO compliance.
 
 See [release readiness](release-readiness.md) and [database design](../03-technical/database-design.md).
+
+## Lifecycle and maintenance planning
+
+See [account lifecycle](../03-technical/account-lifecycle.md) for Proposed deletion/history policies, and [backup/cleanup feasibility](backup-and-cleanup-plan.md) for validated tool capabilities and remaining operational gaps. Immediate logical expiry is distinct from delayed physical purge. The 24-hour RPO remains unverified until the backup/restore workflow is tested.
+
+## Approved account and backup policies — 2026-11-10
+
+Confirmed account deletion blocks access immediately and targets removal of live app data within seven days, without a recovery grace period. Encrypted backups expire after seven days. The 7-day note Trash and 24-hour RPO target are unchanged. See [account lifecycle](../03-technical/account-lifecycle.md) for remaining implementation/history decisions. Earlier references to pending account/backup-retention approval are superseded by this confirmation; runtime verification and RTO remain outstanding.
+
+## Current scope decision — 2026-11-10
+
+Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.
+
+## Approved chat retention — 2026-11-10
+
+Conversation history remains until the user deletes it, subject to storage limits. Confirmed conversation deletion removes live access immediately without Trash; dependent content cleanup is bounded and must not be undone by late generation. Deleting a source blocks future retrieval/citation access, while existing generated answer text remains until its conversation is deleted. Account deletion overrides retention under its approved policy. Implementation details remain Proposed.

@@ -1,8 +1,8 @@
 # Authentication
 
-Status: Draft — specification placeholder
+Status: Draft — integration recommendation validated against documentation
 
-Provider selection remains Proposed; compare managed Neon Auth and self-managed Better Auth before approving integration. No custom password/session cryptography.
+Neon Auth powered by managed Better Auth is the approved authentication provider for the CosmicCore MVP. Google OAuth is the sole initial sign-in method, with public registration and separate private user accounts. Use Neon's supported authentication SDK and session-management integration rather than implementing custom password handling or session cryptography. Provider-specific configuration, session revocation, account linking, callback behavior, and free-tier limits must be validated before implementation and production deployment.
 
 Require server-side session validation and authorization on every data boundary. Use secure HttpOnly cookies and appropriate SameSite behavior, trusted origins, CSRF protections for cookie-authenticated writes, OAuth state/PKCE as required by the selected library, session expiry/revocation, logout and account deletion. Never trust client-supplied owner IDs. Route protection alone is insufficient.
 
@@ -10,7 +10,11 @@ Pending: provider pricing/limits, account linking, guest access, session duratio
 
 ## Owner clarification — 2026-11-10
 
-The app is publicly accessible, including personal use by the owner and family. Starting monthly budget is $0; no paid services or automatic paid overages are authorized. Mock interviews are confirmed for the next milestone. Separate private accounts and Google sign-in are confirmed. Public Google registration is confirmed; the auth library/service remains to be evaluated. These confirmations supersede earlier audience/budget assumptions in this draft.
+The app is publicly accessible, including personal use by the owner and family. Starting monthly budget is $0; no paid services or automatic paid overages are authorized. Mock interviews are confirmed for the next milestone. Separate private accounts and public Google registration are confirmed.
+
+Neon Auth powered by managed Better Auth is the approved MVP authentication provider. Provider integration, OAuth callbacks, session lifecycle, account linking, and free-tier limitations must be validated before production deployment.
+
+These decisions supersede earlier audience, budget, and authentication-provider assumptions in this draft.
 
 ## Confirmed access contract
 
@@ -23,3 +27,9 @@ Acceptance cases for the upcoming slice: a new Google user can register without 
 ## First workflow specification
 
 See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contracts](../04-features/first-workflow/contracts.md) for Proposed request/result shapes, data invariants, validation, concurrency, transfer behavior and acceptance scenarios. Provider SDK/configuration remains subject to verification; these documents do not provision or implement auth.
+
+## Validated integration recommendation
+
+See [auth integration validation](auth-integration-validation.md) for the current managed Better Auth/Google recommendation, callback/session constraints, free-plan evidence and unresolved production requirements. Google-only shadcn/ui sign-in is proposed; no provider has been provisioned.
+
+Account-status blocking and deletion/session requirements are detailed in [account lifecycle](account-lifecycle.md). Provider session caching must not bypass app-level deletion status.

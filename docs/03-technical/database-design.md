@@ -14,7 +14,7 @@ Transactions cover note/tag updates and indexing invalidation; quota reservation
 
 Notes: id, owner_id, collection_id nullable, title, Markdown body, revision, created_at, updated_at. References: id, owner_id, collection_id nullable, URL, title, description, timestamps. Collections/tags: id, owner_id, normalized name and timestamps; normalized-name uniqueness is proposed per owner. User preferences hold appearance and color scheme. Knowledge links use explicit note/reference foreign keys with exactly one target kind, or separate link tables; avoid unchecked polymorphic IDs.
 
-Give owned entities unique (owner_id, id) keys and use matching composite foreign keys for joins, collection assignment, conversation messages, chunks and source mappings. A service ownership check remains necessary. Existence checks must not disclose another user's data. Parameterize SQL; no unrestricted generic repository exposed to browser input.
+Give owned entities unique (owner_id, id) keys and use matching composite foreign keys for joins, collection assignment, conversation messages, chunks and source mappings. Every server-side database operation involving user-owned data must enforce ownership using the authenticated user's internal ID. Ownership must be checked for reads, inserts, updates, deletes, and relationships between records. Client-provided owner IDs must never be trusted as authorization evidence. Existence checks must not disclose another user's data. Parameterize SQL; no unrestricted generic repository exposed to browser input.
 
 Source documents use nullable note_id/reference_id with exactly one populated and uniqueness on each source. Chunks include source revision, ordinal, text hash, text, embedding metadata and readiness. Old chunks are not retrieval candidates after source updates. Message sources retain immutable citation mapping while access resolves against current authorization; snapshot retention/deletion policy is unresolved.
 
@@ -31,3 +31,15 @@ Review generated migrations, run on isolated data, and use expand/contract chang
 ## First workflow specification
 
 See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contracts](../04-features/first-workflow/contracts.md) for Proposed request/result shapes, data invariants, validation, concurrency, transfer behavior and acceptance scenarios. Provider SDK/configuration remains subject to verification; these documents do not provision or implement auth.
+
+## Driver recommendation
+
+The [integration validation](auth-integration-validation.md) proposes Neon Pool/Client with Drizzle neon-serverless for interactive transactions required by quota/revision/idempotency workflows. This remains Proposed and requires runtime verification; do not assume an HTTP-only driver supports interactive callback transactions.
+
+## Reference identity and Dashboard reads
+
+Proposed reference additions: canonical_url_key with owner-scoped uniqueness, optimistic revision and indexed owner/update ordering. Canonicalization deliberately preserves query/path distinctions; see the [reference contract](../04-features/references/spec.md). Reference deletion is confirmed immediate after confirmation, without Trash; linked notes survive. Dashboard reads only bounded projected fields and optionally counts using the same indexes; no new summary/activity table. Note/reference relationship creation enforces owner matching.
+
+## Detailed grounded-chat baseline
+
+See [AI Chat specification](../04-features/ai-chat/spec.md) and [chat contracts](../04-features/ai-chat/contracts.md) for Proposed source mapping, request/stream/persistence behavior, concurrency/quota reservations and acceptance tests. Online free-API models are current scope; local Ollama/Qwen integration remains future scope. Provider/model, history-retention policies and runtime quality remain unresolved.

@@ -4,7 +4,9 @@ Status: Proposed
 
 ## Identity and data boundaries
 
-Anyone may sign in with Google; each account owns private knowledge. Neon managed Better Auth is recommended, not yet approved or configured. Validate server sessions and map stable identity to app_users. Keep secure HttpOnly cookies, trusted origins and CSRF checks; never treat a route guard or valid JWT as record authorization.
+Anyone may sign in with Google; each account owns private knowledge. Neon Auth powered by managed Better Auth is the approved MVP authentication provider. Validate authenticated sessions on the server and map stable provider identities to internal application users (app_users).
+
+Configure secure HttpOnly session cookies, trusted origins, and CSRF protections according to the supported Neon Auth integration. Authentication does not replace record-level authorization: every private operation must enforce ownership using the authenticated user's identity. Exact session lifecycle, revocation behavior, and integration details must be verified before launch.
 
 Owner filters and relational constraints cover notes, collections, tags, references, search, exports, conversations, chunks and citations. Private results must not be shared across users through caches. Account switching/logout clears client state. SQL access is server-only with least privilege; migration credentials are separate. Test two identities at every entry point.
 

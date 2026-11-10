@@ -2,7 +2,11 @@
 
 Status: Proposed | Updated: 2026-11-10
 
-The brief selects technologies; these integration decisions are proposals, not owner approvals.
+The project brief establishes the selected technology stack.
+Architecture Decision Records (ADRs) track implementation
+choices independently. Each ADR retains its own approval
+status, and a selected technology does not automatically
+mean its integration design has been approved.
 
 ## ADR-001: Next.js full-stack
 
@@ -27,6 +31,13 @@ The brief selects technologies; these integration decisions are proposals, not o
 - Costs: Free within current allowances; usage-based upgrade.
 - Risks: Storage/connection/restore assumptions.
 - Reconsider when: Sustained quota pressure or unavailable regional requirements.
+- Decision: Use Neon Auth powered by managed Better Auth as the authentication provider for CosmicCore MVP.
+- Sign-in method: Google OAuth.
+- Identity management: Neon-managed authentication integrated with PostgreSQL.
+- Authorization: Validate authenticated sessions on the server and enforce ownership checks for all private user data.
+- Session security: Use secure session handling supported by the Neon Auth Next.js integration.
+- Implementation: Follow Neon's supported SDK and Next.js integration patterns rather than assuming self-hosted Better Auth configuration.
+- Status: Approved product and provider selection; implementation details require validation.
 
 ## ADR-003: Drizzle ORM
 
@@ -43,13 +54,13 @@ The brief selects technologies; these integration decisions are proposals, not o
 ## ADR-004: Authentication
 
 - Status: Proposed
-- Context/problem: Identity and session lifecycle are unresolved.
+- Context/problem: Google sign-in is approved for the MVP, but the authentication provider, session lifecycle, and integration details still require technical evaluation and approval.
 - Proposed solution: Evaluate managed Neon Auth first, with Google as the confirmed sign-in method. The auth library/service remains Proposed.
 - Alternatives: Self-managed Better Auth or another managed provider.
 - Benefits: Potentially fewer operating tasks.
 - Drawbacks: Provider integration and quota dependence.
 - Costs: MAU/email/session pricing unverified.
-- Risks: Callback, cookie and session misconfiguration.
+- Risks: OAuth callback misconfiguration, insecure session cookies, session hijacking, unauthorized access to private user data, and improper account isolation. All protected server operations must validate the authenticated user and enforce ownership checks.
 - Reconsider when: Cost, required methods, export or security requirements fail evaluation.
 
 ## ADR-005: RAG storage
@@ -57,7 +68,7 @@ The brief selects technologies; these integration decisions are proposals, not o
 - Status: Proposed
 - Context/problem: Private grounded retrieval must fit a small database.
 - Proposed solution: PostgreSQL full-text first; evaluate pgvector in the same database.
-- Alternatives: Lexical-only RAG; separate vector service later.
+- Alternatives: Add pgvector-based hybrid retrieval if lexical-only quality fails evaluation; consider a separate vector service only if PostgreSQL no longer meets measured requirements.
 - Benefits: One ownership boundary and fewer services.
 - Drawbacks: Embedding storage/reindex cost; lexical quality limitations.
 - Costs: Embedding inference and database storage.
@@ -122,7 +133,7 @@ Status: Approved | Date: 2026-11-10
 - Risks: Public registration exposes the app to abuse and quota exhaustion. Apply per-user and global usage limits while keeping records private. Exact implementation requires provider validation.
 - Reconsider when: the owner requests sharing or a family member needs another sign-in method.
 
-The managed versus self-managed auth choice remains Proposed in ADR-004.
+Neon Auth powered by managed Better Auth is the approved MVP authentication provider under ADR-004. Self-managed Better Auth is not selected for the MVP. Authentication SDK integration, session management, OAuth configuration, and deployment compatibility still require technical validation before implementation and production release.
 
 ## Enrollment clarification — 2026-11-10
 
@@ -154,3 +165,117 @@ Status: Approved product targets | Date: 2026-11-10
 - Risks: a $0 backup mechanism is not yet verified; remaining history/account/backup retention and RTO are unresolved.
 - Reconsider when: storage budget, privacy needs or restore tests demonstrate infeasibility.
 - Specification: [retention and recovery](../07-deployment/data-retention-and-recovery.md).
+
+## ADR-004 validation update — 2026-11-10
+
+Status: Proposed (documentation evidence checked). Recommend managed Neon Better Auth with Google-only custom shadcn/ui screen. Supported Next.js/social capabilities fit the slice. Remaining risks: session-cache freshness, production OAuth/domain setup, SMTP applicability and account limits. No additional provider approval inferred. See [validation](../03-technical/auth-integration-validation.md).
+
+## ADR-009: Transaction-capable database driver
+
+- Decision: Use Neon PostgreSQL with Drizzle ORM.
+- Primary transactional driver: Neon WebSocket (neon-serverless) for interactive transactions.
+- Optional query driver: Neon HTTP for simple, non-interactive operations.
+- Connection strategy: Use pooled application connections and direct connections for migrations.
+- Runtime: Next.js server-side Node.js runtime for database operations.
+- Validation: Test transactions, rollback, concurrency, and connection cleanup in the target Vercel runtime before final approval.
+
+## Owner decision record — account deletion and backup expiry
+
+Status: Approved product targets | Date: 2026-11-10
+
+- Context: account erasure and backups need explicit, separate retention rules.
+- Decision: block app access immediately after confirmed deletion; target live-data removal within seven days with no recovery grace period. Retain encrypted backups for seven days, then expire them.
+- Alternatives: account recovery grace period; 30-day backup retention.
+- Benefits: immediate privacy boundary and short, explicit retention.
+- Drawbacks/costs: less recovery history; cleanup/expiry/journal operations require reliable execution and storage.
+- Risks: independent $0 backup and provider cleanup are unverified; backups may temporarily retain deleted content until expiry. Restores must reapply later deletion requests.
+- Reconsider when: the owner changes recovery/privacy requirements or feasibility tests cannot meet the targets.
+- Details: [account lifecycle](../03-technical/account-lifecycle.md), [backup plan](../07-deployment/backup-and-cleanup-plan.md).
+
+## Owner decision record — defer backups beyond MVP
+
+Status: Approved scope change | Date: 2026-11-10
+
+- Context: backup hosting remains undecided under the $0 budget; owner chose future scope.
+- Decision: application-managed backups and disaster recovery are outside MVP. Retain 24-hour RPO and seven-day encrypted retention as future targets only.
+- Benefits: removes an operational dependency from MVP delivery.
+- Trade-offs/risks: MVP has no promised disaster-recovery capability; Markdown export and Trash do not replace database backup.
+- Costs: no additional backup service selected or provisioned.
+- Retained MVP work: safe migrations, user export/import, seven-day Trash, account access blocking and live-data deletion cleanup.
+- Reconsider when: the owner starts the backup milestone or changes recovery needs.
+
+## Owner decision record — reference deletion
+
+Status: Approved | Date: 2026-11-10
+
+- Context: note Trash does not establish retention for saved references.
+- Decision: immediate reference removal after confirmation; no reference Trash. Preserve linked notes and remove reference associations/search/retrieval access.
+- Alternative: seven-day reference Trash.
+- Benefits: simple deletion semantics and less retained live data.
+- Drawback: no built-in reference recovery after confirmation.
+- Costs/risks: transactional cleanup and stale-update protection are required; historical generated excerpts are governed separately.
+- Reconsider when: the owner requests reference recovery based on usage.
+
+## Owner direction — optional free hosted and local AI
+
+Status: Approved capability direction; integration Proposed | Date: 2026-11-10
+
+- Context: the owner wants both free online models and their local AI.
+- Direction: optional approved provider adapters, with provider/model recorded per attempt and explicit selection.
+- Alternatives: hosted-only or local-only inference.
+- Benefits: model flexibility and local compute reuse; drawbacks include differing limits, privacy and connectivity.
+- Costs/risks: free API quotas are limited; local hardware uptime/electricity still matter; public access to local compute requires separate secured topology.
+- Reconsider when: selected provider terms/availability or hardware do not satisfy the evaluated workload.
+- Unresolved: runtime/model, intended availability of owner local compute and exact hosted provider/model. [Provider options](../03-technical/ai-provider-options.md) contains current evidence.
+
+## Owner scope refinement — local AI deferred
+
+Status: Approved | Date: 2026-11-10
+
+Ollama with a Qwen ~7B model is the owner's local option (exact tag unknown). Local integration/connectivity is future scope. Focus the initial AI milestone on free online API models; retain the provider adapter seam without building a bridge or local selector. No hosted provider or model is approved by this scope refinement.
+
+## Owner decision record — chat retention and source deletion
+
+Status: Approved | Date: 2026-11-10
+
+- Context: conversation deletion and deletion of its cited sources have distinct effects.
+- Decision: retain chat history until user deletion; confirmed deletion removes it without Trash. Source deletion blocks future retrieval/citation access but leaves existing generated answer text until the conversation is deleted.
+- Alternatives: automatic chat expiry, chat Trash or automatic historical-answer redaction.
+- Benefits: predictable history and simple user-controlled deletion.
+- Drawbacks/risks: historical generated text may retain source information; disclose this distinction. No recovery after chat deletion is offered.
+- Costs: bounded dependent cleanup, storage limits and race protection are still needed.
+- Reconsider when: owner changes privacy/history requirements.
+
+## ADR-010: Initial hosted chat model and switching
+
+- Status: Approved initial planning choice; operational profile Proposed and runtime validation pending.
+- Context: online free-API MVP needs a concrete starting provider with a future switch path.
+- Choice: Groq Free / openai/gpt-oss-20b; evaluate openai/gpt-oss-120b if quality requires it. Keep application-owned provider adapter/configuration.
+- Alternatives: Gemini free under separately verified compatible data terms; other verified free APIs; local Ollama later.
+- Benefits: limited initial integration surface; changeable model without rewriting domain logic or reindexing for chat-only changes.
+- Drawbacks/costs: restrictive shared free-token quotas and external model availability; no measured quality yet.
+- Risks: privacy configuration, reasoning tokens, provider limits and term changes require validation; no automatic paid or cross-provider fallback.
+- Reconsider when: grounded quality, account access or free quota cannot satisfy the pilot.
+- Evidence/conditions: [hosted model selection](../03-technical/hosted-model-selection.md).
+
+## Owner decision record — first visit and account defaults
+
+Status: Approved as specified | Date: 2026-11-10
+
+- First-visit color preference: System, following OS light/dark. Initial Cosmic/Minimal appearance remains unresolved; do not infer Minimal approval.
+- MVP profile: read-only Google-derived fields.
+- Re-registration: a new empty account is allowed only after prior app/provider deletion finishes. No old-data restoration or bypass of pending deletion.
+- Benefits: familiar theme behavior, simple identity management and explicit account lifecycle.
+- Alternatives/trade-offs: fixed light/dark, editable local profile and permanent re-registration ban were not selected. Read-only profile limits customization; fresh registration does not recover deleted data.
+- Risks/costs: system/theme synchronization and identity cleanup races still require verification; operational audit retention remains open.
+- Reconsider when: the owner changes appearance, customization or account-lifecycle requirements.
+
+## Owner decision record — Cosmic default and minimal audit retention
+
+Status: Approved | Date: 2026-11-10
+
+- Decision: Cosmic on first visit, System for light/dark, with the header light/dark button and Minimal option retained.
+- Decision: seven-day app-controlled operational/security metadata retention; no note/chat content or secrets in logs. Detailed implementation remains Proposed.
+- Benefits/trade-offs: recognizable initial visual identity with user control; short debugging window rather than long audit history.
+- Scope: owner requested minimal attention/complexity for retention; no separate audit platform. Actual host/provider retention still requires a practical configuration check.
+- Reconsider only on concrete owner request or implementation constraint.

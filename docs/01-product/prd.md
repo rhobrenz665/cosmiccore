@@ -51,3 +51,19 @@ Before public launch, set operator-configurable per-user storage/write/request l
 [User journeys](user-workflows.md), [system diagrams](../02-architecture/diagrams/README.md), [data model](../03-technical/database-design.md), [API boundaries](../03-technical/api-design.md), and [release gates](../07-deployment/release-readiness.md) define the cross-feature baseline.
 
 Feature details under ../04-features/ must be completed before each implementation task. Provider selection, exact limits, data retention/recovery and AI quality targets remain explicit open decisions. This draft is reviewable overall planning, not final implementation approval.
+
+## Current scope decision — 2026-11-10
+
+Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.
+
+## Detailed feature coverage
+
+[References](../04-features/references/spec.md) and [Dashboard](../04-features/dashboard/spec.md) now have detailed Proposed requirements, workflows, errors, contracts and acceptance matrices. Reference deletion is confirmed immediate after confirmation, without Trash. URL normalization, resource thresholds and summary layouts remain Proposed technical details. Backups remain outside MVP.
+
+## Detailed grounded-chat baseline
+
+See [AI Chat specification](../04-features/ai-chat/spec.md) and [chat contracts](../04-features/ai-chat/contracts.md) for Proposed source mapping, request/stream/persistence behavior, concurrency/quota reservations and acceptance tests. Online free-API models are current scope; local Ollama/Qwen integration remains future scope. Provider/model, history-retention policies and runtime quality remain unresolved.
+
+## Approved chat retention — 2026-11-10
+
+Conversation history remains until the user deletes it, subject to storage limits. Confirmed conversation deletion removes live access immediately without Trash; dependent content cleanup is bounded and must not be undone by late generation. Deleting a source blocks future retrieval/citation access, while existing generated answer text remains until its conversation is deleted. Account deletion overrides retention under its approved policy. Implementation details remain Proposed.
