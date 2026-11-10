@@ -1,0 +1,7 @@
+"use client";
+import { useAppearance } from "@/components/appearance/provider";
+
+export default function Settings() {
+  const { appearance, color, setAppearance, setColor } = useAppearance();
+  return <div className="page-wrap"><div className="page-heading"><span className="eyebrow">MAKE IT YOURS</span><h1>Appearance</h1><p>Choose a comfortable look for this local preview. Account settings arrive with sign-in.</p></div><section className="settings-card"><div><h2>Visual style</h2><p>Cosmic adds a little atmosphere. Minimal keeps the same layout with quieter surfaces.</p></div><div className="choice-row" role="group" aria-label="Visual style">{(["cosmic","minimal"] as const).map(value => <button key={value} type="button" aria-pressed={appearance === value} onClick={() => setAppearance(value)}>{value === "cosmic" ? "Cosmic" : "Minimal"}</button>)}</div></section><section className="settings-card"><div><h2>Color preference</h2><p>System follows your device. The header button switches directly between light and dark.</p></div><div className="choice-row" role="group" aria-label="Color preference">{(["light","dark","system"] as const).map(value => <button key={value} type="button" aria-pressed={color === value} onClick={() => setColor(value)}>{value[0].toUpperCase()+value.slice(1)}</button>)}</div></section><p className="fine-print">Preferences are stored in this browser for preview and are not linked to an account.</p></div>;
+}

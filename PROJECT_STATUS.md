@@ -181,3 +181,15 @@ Owner requested committing/pushing the current documentation with Codex attribut
 Resume task: review docs/02-architecture/foundation-implementation-proposal.md and technical auth/driver proposals, then obtain explicit application-implementation authorization before BUILD-01. Planning completion estimate was informal, not an audited readiness percentage. No application code or infrastructure exists. Continue one document/task at a time, avoid re-reading unchanged files and keep output concise.
 
 This entry records authorization and handoff, not a self-verifying push claim; use Git branch/remote state to confirm the checkpoint.
+
+## BUILD-01 local foundation — 2026-11-10
+
+Owner explicitly authorized implementation with “Ok proceed.” Added a local Next.js 16.4.6 / React 19.3 / TypeScript application using Tailwind 4.3, current shadcn/ui Base UI components and Lucide. The shared shell has responsive desktop/sidebar and mobile bottom/More navigation, all planned foundation routes, safe loading/error/not-found views, and Cosmic/Minimal plus light/dark/system browser-local preview controls. First visit defaults to Cosmic + System; the header button selects the opposite resolved color. Route content is clearly labeled as a local interface preview. No auth, database, private user data, inference or cloud service was connected.
+
+Verification: `npm run typecheck`, `npm run lint`, and `npm run build` passed. The build uses Next.js Webpack with Tailwind PostCSS because the generated Turbopack CSS worker could not bind a local port in this environment. Browser review checked dashboard and settings, 320px layout without horizontal overflow, mobile More sheet, and preference persistence after reload. `npm audit --omit=dev` reported zero production dependency advisories. Full dependency audit still reported development-tool advisories; evaluate them before CI/production setup. Browser review did not establish full WCAG contrast or screen-reader certification. Existing planning documents were preserved.
+
+Next smallest milestone: review and authorize BUILD-02 Google sign-in and stable internal user mapping, including a minimal `app_users` migration needed by identity mapping. Resolve the stale ADR/readiness wording before treating it as an implementation contract. Production OAuth credentials, session freshness and two-account isolation need runtime verification. No provisioning, commit, push or deployment was performed in BUILD-01.
+
+## Foundation Git checkpoint — 2026-11-11
+
+Owner requested continuing the push. Verified earlier planning commits already match GitHub main, then prepared the existing uncommitted BUILD-01 foundation for the next checkpoint without adding application functionality. Re-ran typecheck, lint and production build successfully; checked candidate source/configuration files for credential patterns with no matches. No auth/database/model/provider service was connected or provisioned. Resume at BUILD-02 proposal review/authorization; current foundation remains a local UI preview. Git state must confirm publication, not this entry alone.

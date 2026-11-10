@@ -10,3 +10,16 @@ node_modules/
 out/
 coverage/
 *.log
+
+# Next.js build and local tooling
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+*.pem
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
