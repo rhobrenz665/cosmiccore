@@ -1,12 +1,14 @@
 # Authentication
 
-Status: Draft — integration recommendation validated against documentation
+Status: Implemented for local development — production and multi-account runtime validation pending
 
 Neon Auth powered by managed Better Auth is the approved authentication provider for the CosmicCore MVP. Google OAuth is the sole initial sign-in method, with public registration and separate private user accounts. Use Neon's supported authentication SDK and session-management integration rather than implementing custom password handling or session cryptography. Provider-specific configuration, session revocation, account linking, callback behavior, and free-tier limits must be validated before implementation and production deployment.
 
 Require server-side session validation and authorization on every data boundary. Use secure HttpOnly cookies and appropriate SameSite behavior, trusted origins, CSRF protections for cookie-authenticated writes, OAuth state/PKCE as required by the selected library, session expiry/revocation, logout and account deletion. Never trust client-supplied owner IDs. Route protection alone is insufficient.
 
-Pending: provider pricing/limits, account linking, guest access, session duration, recovery, callback configuration and identity-to-domain user mapping. Secrets stay server-side and separate by environment.
+Implemented in BUILD-02: official Next.js server/client integration, same-origin auth proxy, Google-only sign-in, protected workspace routes, server-side session validation, sign-out, safe internal callbacks and an idempotent issuer/subject-to-`app_users.id` mapping. Secrets stay server-side and separate by environment.
+
+Pending release evidence: real new/returning Google flows, canceled consent, session reload and account switching; two-account isolation after private resources exist; actual session freshness/revocation behavior; custom production Google credentials, trusted origins and production localhost disablement; account-specific quota confirmation. No guest access or password sign-in is included.
 
 ## Owner clarification — 2026-11-10
 
@@ -30,6 +32,6 @@ See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contr
 
 ## Validated integration recommendation
 
-See [auth integration validation](auth-integration-validation.md) for the current managed Better Auth/Google recommendation, callback/session constraints, free-plan evidence and unresolved production requirements. Google-only shadcn/ui sign-in is proposed; no provider has been provisioned.
+See [auth integration validation](auth-integration-validation.md) for callback/session constraints, free-plan evidence and unresolved production requirements. A dedicated Neon development project and Managed Better Auth service were provisioned for BUILD-02. The custom Google-only interface uses the supported `@neon/auth` API; production Google credentials have not been configured.
 
 Account-status blocking and deletion/session requirements are detailed in [account lifecycle](account-lifecycle.md). Provider session caching must not bypass app-level deletion status.
