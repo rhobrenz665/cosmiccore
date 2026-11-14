@@ -211,3 +211,27 @@ Owner requested a compact checkpoint and PR with Codex co-authorship. Package th
 Current state: Google sign-in integration, protected workspace and internal identity migration are implemented; knowledge features remain previews. Open checks: apply the migration, exercise Google sign-in/sign-out/reload and two-account isolation, validate session revocation, and configure production OAuth. Review the authenticated unavailable-account redirect path during runtime acceptance: sign-in currently redirects any existing session back to the workspace. Existing dependency peer/advisory findings remain recorded above.
 
 Smallest next milestone: apply and verify the development migration, then complete one real Google sign-in/sign-out/reload flow before BUILD-03. PR publication is verified through GitHub, not inferred from this handoff.
+
+## Safari local sign-in investigation — 2026-11-15
+
+Observed Google account chooser opening in Safari, followed by the owner's reported return to the public “Welcome back” sign-in page on HTTP localhost. Reproduced the public sign-in state in Safari. The OAuth API returned 200 with a redirect URL, and following that URL reached Google. The installed SDK requires Secure cookies for its OAuth challenge and session; Safari's lack of an HTTP localhost exception is the leading cause of the missing session. No authenticated dashboard success has been established, and callback/database causes have not been fully ruled out.
+
+Added `npm run dev:https` and documented Safari's HTTPS requirement and owner-controlled certificate trust setup. No certificate authority installed, database migration applied, commit or push performed. Next smallest milestone: start a trusted local HTTPS server, repeat Google sign-in in Safari and inspect dashboard/reload behavior; verify the application identity migration if dashboard entry fails afterward.
+
+## Cross-browser sign-in root cause — 2026-11-15
+
+The owner confirmed the failure also occurs in Chrome. A temporary diagnostic found a Chrome session-token cookie but no valid upstream session; changing the Origin header did not restore it. The decisive finding was that root `proxy.ts` was ignored because this project uses `src/app`: existing production middleware/function manifests had no registered proxy, and a request did not execute temporary proxy instrumentation. Consequently Neon's OAuth verifier exchange never ran, and the server session guard returned users to sign-in. Moved the unchanged auth proxy configuration to `src/proxy.ts`. Next.js now compiles the proxy and a signed-out request to a diagnostic protected path receives 307 to sign-in. Removed temporary diagnostic endpoint and instrumentation. The prior Safari transport explanation is an additional local constraint, not the complete cross-browser root cause.
+
+Read-only SQL also confirmed `public.app_users` is absent. That is a separate authenticated dashboard blocker; no migration was applied in this diagnosis. Smallest next milestone: apply the reviewed development identity migration and verify a fresh HTTPS Google round trip, dashboard entry, reload and sign-out. No commit or push performed.
+
+Validation: the same build-manifest assertion failed before the move and passed afterward. Production build now lists “Proxy (Middleware)”; lint, typecheck and Git whitespace checks pass. A full authenticated Google-to-dashboard flow remains unverified pending the database migration and a new sign-in.
+
+## Development identity migration applied — 2026-11-15
+
+Owner explicitly authorized applying the migration. Verified that the direct migration URL targets the same database as the application connection, then ran `npm run db:migrate` successfully. Verified `public.app_users` through the application connection: nine columns, primary key, active/deletion-pending/blocked status constraint, unique issuer/subject index and email index. Drizzle records one applied migration. Managed auth tables were not modified by this migration. No additional domain tables, commit or push were created.
+
+The missing identity-table blocker is resolved. The owner subsequently confirmed the dashboard is working. Session restoration after reload, sign-out/sign-in, and two-account isolation remain unverified.
+
+## Authentication fix PR checkpoint — 2026-11-15
+
+Owner requested a PR with Codex co-authorship for the proxy location fix, local HTTPS command and troubleshooting/migration evidence. Dashboard access is owner-confirmed after the proxy fix and development migration. No new migration is introduced by this PR; other environments still require the existing identity migration. Build, lint, typecheck, proxy registration and documentation-link checks passed during this work. Next smallest milestone: verify dashboard reload and sign-out/sign-in, then account isolation. Machine-local Neon configuration and environment/certificate secrets remain excluded.
