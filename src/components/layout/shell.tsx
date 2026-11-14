@@ -1,22 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Menu, Moon, Sparkles, Sun } from "lucide-react";
+import { LoaderCircle, LogOut, Menu, Moon, Sparkles, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAppearance } from "@/components/appearance/provider";
 import { primaryNavigation, secondaryNavigation } from "@/lib/navigation";
+import { authClient } from "@/lib/auth/client";
 
 const mobilePrimary = primaryNavigation.filter(item => item.href !== "/references");
 const moreNavigation = [primaryNavigation[3], ...secondaryNavigation];
 
-export function Shell({ children }: { children: React.ReactNode }) {
+type ShellUser = { name: string | null; email: string; image: string | null };
+
+export function Shell({ children, user }: { children: React.ReactNode; user: ShellUser }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState(false);
   const { resolvedColor, setColor } = useAppearance();
   const nextColor = resolvedColor === "dark" ? "light" : "dark";
+  async function signOut() {
+    setSigningOut(true);
+    setSignOutError(false);
+    const result = await authClient.signOut();
+    if (result.error) {
+      setSignOutError(true);
+      setSigningOut(false);
+      return;
+    }
+    router.replace("/");
+    router.refresh();
+  }
+
   return <div className="shell">
     <a className="skip-link" href="#main-content">Skip to content</a>
     <aside className="sidebar" aria-label="Workspace navigation">
@@ -28,7 +47,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <nav aria-label="Utilities" className="sidebar-footer">{secondaryNavigation.map(item => <NavLink key={item.href} item={item} active={pathname === item.href}/>)}</nav>
     </aside>
     <div className="shell-main">
-      <header className="topbar"><Link href="/" className="mobile-brand"><Sparkles size={19}/> CosmicCore</Link><span className="topbar-label">Your knowledge space</span><Button variant="outline" size="icon" aria-label={`Switch to ${nextColor} mode`} title={`Switch to ${nextColor} mode`} onClick={() => setColor(nextColor)}>{resolvedColor === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</Button></header>
+      <header className="topbar"><Link href="/" className="mobile-brand"><Sparkles size={19}/> CosmicCore</Link><span className="topbar-label">Your knowledge space</span>{signOutError && <span className="signout-error" role="alert">Sign-out failed. Try again.</span>}<span className="account-label" title={user.email}>{user.name || user.email}</span><Button variant="outline" size="icon" aria-label={`Switch to ${nextColor} mode`} title={`Switch to ${nextColor} mode`} onClick={() => setColor(nextColor)}>{resolvedColor === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</Button><Button variant="outline" size="icon" aria-label="Sign out" title="Sign out" onClick={signOut} disabled={signingOut}>{signingOut ? <LoaderCircle className="spin" size={18}/> : <LogOut size={18}/>}</Button></header>
       <main id="main-content" tabIndex={-1} className="main-content">{children}</main>
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">

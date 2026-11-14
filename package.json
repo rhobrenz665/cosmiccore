@@ -5,14 +5,19 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@neon/auth": "^0.8.2",
+    "@neondatabase/serverless": "^1.2.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.71.0",
     "next": "16.4.6",
     "react": "19.3.0",
@@ -24,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "shadcn": "^4.23.0",

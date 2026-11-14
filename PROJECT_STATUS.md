@@ -193,3 +193,21 @@ Next smallest milestone: review and authorize BUILD-02 Google sign-in and stable
 ## Foundation Git checkpoint — 2026-11-11
 
 Owner requested continuing the push. Verified earlier planning commits already match GitHub main, then prepared the existing uncommitted BUILD-01 foundation for the next checkpoint without adding application functionality. Re-ran typecheck, lint and production build successfully; checked candidate source/configuration files for credential patterns with no matches. No auth/database/model/provider service was connected or provisioned. Resume at BUILD-02 proposal review/authorization; current foundation remains a local UI preview. Git state must confirm publication, not this entry alone.
+
+## BUILD-02 Google identity implementation — 2026-11-14
+
+Owner explicitly authorized the next feature with “Ok lets do it.” Created and linked an isolated CosmicCore Neon development project in AWS Singapore and enabled Managed Better Auth. Added the supported `@neon/auth` Next.js proxy/client integration, Google-only sign-in UI, safe internal return paths, protected workspace middleware, server-side session enforcement, visible account/sign-out controls and clear auth failure states. Landing/sign-in remain public; workspace routes require a session.
+
+Added the narrow application-owned identity slice: Drizzle schema and generated migration for `app_users`, with an internal UUID, unique auth issuer/subject identity, read-only Google profile projection and active/deletion-pending/blocked status. Workspace entry performs an atomic upsert, so concurrent first loads converge on one internal user. Managed `neon_auth` tables remain provider-owned. Broader domain schema and BUILD-03 quota/ownership tables were not pulled forward.
+
+Verification: `npm run typecheck`, `npm run lint` and the production build pass. Local HTTP checks returned 200 for `/` and `/auth/sign-in`, and 307 from signed-out `/dashboard` to `/auth/sign-in`. The generated migration still requires the owner's manual `drizzle-kit migrate` step. A live Google round trip, returning-user session restore, canceled consent, logout/account switching and two-account isolation remain unverified. Production also requires app-owned Google OAuth credentials, trusted domains and localhost disabled. The current official SDK tree has an upstream peer mismatch (`@neon/auth` pins `@better-fetch/fetch` 1.3.2 while its resolved OAuth plugin requests 1.3.3); typecheck/build pass, but `npm ls` reports it. Production audit also reports four moderate advisories in Drizzle Kit's development-only legacy esbuild chain; no force downgrade was applied.
+
+Next smallest milestone: apply and verify the `app_users` migration, complete one development Google sign-in/sign-out/reload flow using Neon's shared development credentials, then test a second Google account and record actual session behavior. Only after BUILD-02 runtime acceptance should BUILD-03 expand the private data schema and ownership tests. No commit, push or deployment was performed.
+
+## BUILD-02 PR handoff — 2026-11-15
+
+Owner requested a compact checkpoint and PR with Codex co-authorship. Package the existing BUILD-02 changes for review; no additional application features, migrations or provisioning are authorized by this checkpoint. Typecheck, lint and production build passed again. Local environment secrets and the machine-local `.neon` project link are excluded from the commit.
+
+Current state: Google sign-in integration, protected workspace and internal identity migration are implemented; knowledge features remain previews. Open checks: apply the migration, exercise Google sign-in/sign-out/reload and two-account isolation, validate session revocation, and configure production OAuth. Review the authenticated unavailable-account redirect path during runtime acceptance: sign-in currently redirects any existing session back to the workspace. Existing dependency peer/advisory findings remain recorded above.
+
+Smallest next milestone: apply and verify the development migration, then complete one real Google sign-in/sign-out/reload flow before BUILD-03. PR publication is verified through GitHub, not inferred from this handoff.

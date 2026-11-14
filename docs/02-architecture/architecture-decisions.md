@@ -53,15 +53,17 @@ mean its integration design has been approved.
 
 ## ADR-004: Authentication
 
-- Status: Proposed
-- Context/problem: Google sign-in is approved for the MVP, but the authentication provider, session lifecycle, and integration details still require technical evaluation and approval.
-- Proposed solution: Evaluate managed Neon Auth first, with Google as the confirmed sign-in method. The auth library/service remains Proposed.
+- Status: Approved and implemented for local development; production configuration and runtime acceptance remain open
+- Context/problem: Google sign-in is required for public registration and separate private accounts. The provider and identity mapping must integrate with the app without custom session cryptography.
+- Decision: Use Managed Neon Auth powered by Better Auth through the supported `@neon/auth` Next.js integration. Google is the sole initial sign-in method. Map each provider issuer/subject pair idempotently to an internal `app_users.id` UUID.
 - Alternatives: Self-managed Better Auth or another managed provider.
-- Benefits: Potentially fewer operating tasks.
-- Drawbacks: Provider integration and quota dependence.
-- Costs: MAU/email/session pricing unverified.
+- Benefits: Managed sessions and OAuth, branch-local auth data, and an application-owned stable identity for future private records.
+- Drawbacks: Provider integration and quota dependence; the application must still enforce owner checks at every data boundary.
+- Costs: The development integration fits the current Neon free plan; actual account limits and production capacity remain release checks.
 - Risks: OAuth callback misconfiguration, insecure session cookies, session hijacking, unauthorized access to private user data, and improper account isolation. All protected server operations must validate the authenticated user and enforce ownership checks.
-- Reconsider when: Cost, required methods, export or security requirements fail evaluation.
+- Runtime evidence: The SDK proxy, Google-only sign-in UI, protected workspace middleware, server session check, sign-out path and generated `app_users` migration were implemented in BUILD-02. Signed-out HTTP checks confirm `/` and `/auth/sign-in` are public and `/dashboard` redirects to sign-in.
+- Remaining gates: Apply the development migration; verify new/returning sign-in, canceled consent, reload, logout/account switching and two-account isolation; add app-owned Google credentials and trusted production origins before release.
+- Reconsider when: Cost, required methods, export, security requirements or runtime acceptance fail evaluation.
 
 ## ADR-005: RAG storage
 
