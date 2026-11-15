@@ -48,6 +48,15 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       if (!note) throw new DataAccessError("NOT_FOUND");
       return note;
     },
+    async lockNoteForUpdate(id: string) {
+      validateId(id);
+      const [note] = await tx.select({
+        id: notes.id, title: notes.title, body: notes.body, storageBytes: notes.storageBytes,
+        collectionId: notes.collectionId, revision: notes.revision, updatedAt: notes.updatedAt,
+      }).from(notes).where(and(eq(notes.ownerId, ownerId), eq(notes.id, id), isNull(notes.deletedAt))).for("update");
+      if (!note) throw new DataAccessError("NOT_FOUND");
+      return note;
+    },
     async getReference(id: string) {
       validateId(id);
       const [reference] = await tx.select({

@@ -1,8 +1,8 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.2 implemented; validation pending
+Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.3 implemented; validation pending
 
-Latest checkpoint: BUILD-04.2 editor and safe Markdown preview implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04.3 serialized note autosave and conflict handling implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -339,3 +339,13 @@ Owner authorized proceeding one feature step at a time and requested a summary a
 This step edits only local component state: changes are explicitly labeled unsaved and will be discarded on refresh/navigation. Persistence, autosave, and conflicts are deferred to BUILD-04.3. No tests, typecheck, browser/runtime checks, or database checks were run in this step. `git diff --check` passed. Dependency installation succeeded with an existing peer-dependency resolution warning in the auth dependency tree; unrelated audit findings were not changed. Existing `.neon` and unrelated in-progress BUILD-03 files remain untouched; no commit or push performed.
 
 Smallest next milestone: pause for owner review of this step; then proceed to BUILD-04.3 only when directed. BUILD-04.1 acceptance remains unverified, global capacity values remain unset, and operational cleanup/role grants remain Proposed.
+
+## BUILD-04 Step 3 — serialized autosave and revision conflicts — 2026-11-15
+
+Owner asked to continue with the next feature step and specified that each feature must use a new branch. Created local branch `codex/build-04-3-autosave` from commit `3e603c4` before changing feature files; the prior machine-local `.neon` remains untracked. Implemented a one-second debounce and a single in-flight save per editor. Saves use client UUID mutation IDs, retry the same payload/ID after uncertain errors, and send any newer edits only after the acknowledged revision advances. A before-unload warning remains active while changes need attention.
+
+Added an owner-scoped save service inside the existing private mutation transaction. It locks the active note row, compares the expected revision, validates/normalizes title and body, computes the UTF-8 byte delta, and atomically writes body/title/revision/timestamp with quota accounting and the receipt. Conflicts return only the latest authorized note. The editor preserves local text and offers “Use server version” with discard confirmation or “Save my version” with overwrite confirmation against the latest revision. Expired retry receipts are reconciled by presenting the latest authorized version for an explicit choice.
+
+No tests, typecheck, build, browser/runtime checks, or database checks were run in this step. This is implementation status, not acceptance evidence. See [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md). Global caps, physical receipt/rate cleanup, role separation, and target-host behavior remain unresolved operational gates.
+
+Smallest next milestone: pause for owner review; then proceed to BUILD-04.4 (collections and tags) only when directed. No commit or push performed.

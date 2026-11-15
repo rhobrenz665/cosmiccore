@@ -1,8 +1,8 @@
 # BUILD-04 — Markdown notes and organization step plan
 
-Status: BUILD-04.2 implemented; validation pending; remaining steps Proposed | Updated: 2026-11-15
+Status: BUILD-04.3 implemented; validation pending; remaining steps Proposed | Updated: 2026-11-15
 
-This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 and BUILD-04.2 are implemented in source; neither has been runtime/acceptance tested yet. BUILD-04.2 is local-buffer-only: edits are not persisted until BUILD-04.3 adds autosave.
+This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 through BUILD-04.3 are implemented in source; runtime/acceptance testing remains pending.
 
 ## Scope
 
@@ -31,6 +31,8 @@ Global capacity settings remain blank and fail closed. Code may be implemented w
 **Deliverable:** One-second debounce, one in-flight save per editor, same mutation ID for retrying an unchanged uncertain request, a follow-up save for edits typed during a pending request, visible Dirty/Saving/Saved/Error states, preserved local text on failure, and before-unload warning while unsaved.
 
 **Acceptance:** “Saved” appears only after the current buffer is acknowledged; network/quota/rate failures preserve all local text; retry does not duplicate or charge twice; two tabs saving the same revision produce a conflict; the losing editor retains its buffer and shows the latest authorized server version. “Use server version” warns before discarding local text; “Save my version” clearly confirms overwrite against the newest revision and can conflict again.
+
+**Implementation note:** The save uses the existing receipt/quota transaction, checks the owner-scoped active note revision under a row lock, and applies content, generated storage-byte accounting, updated timestamp, and revision bump atomically. An uncertain request keeps its mutation ID and payload until reconciled. If a retry receipt has expired, the action loads the latest authorized note and presents a version choice instead of silently issuing a fresh mutation. Implementation is present; acceptance is not yet tested.
 
 ### BUILD-04.4 — Collections, tags, and associations
 
