@@ -1,8 +1,8 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04 source implemented; local verification passed; manual feature acceptance pending
+Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04 scope implemented; core local acceptance passed; remaining acceptance gates open
 
-Latest checkpoint: BUILD-04.5 acceptance handoff recorded; local checks passed, signed-in/database-backed feature acceptance pending, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04 core signed-in local acceptance and current-state README recorded; residual acceptance and production decisions remain open, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -377,3 +377,7 @@ Not verified: two-account isolation, global-cap exhaustion/races, live per-accou
 Local checks after the copy change passed: `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules` (3 passed), `npm run test:connection-lifecycle` (6 passed), and `npm run build`.
 
 Smallest next milestone: finish the remaining BUILD-04 acceptance for two-account isolation, live quota exhaustion/retry behavior, responsive and keyboard/screen-reader use, and target-host behavior. Keep production capacity values and operational gates Proposed until workload, provider budget, and owner decisions are recorded. No further feature step is planned after BUILD-04.5.
+
+## README status update — 2026-11-15
+
+Replaced the initialization-era README with current product capabilities, BUILD-04 acceptance status, local setup guidance, validation commands, and links to project documents. It distinguishes local-only mutation caps from unresolved production limits and warns that target-host and remaining acceptance checks are still open.

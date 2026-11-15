@@ -1,24 +1,49 @@
 # CosmicCore 2.0
 
-Status: Draft — planning only. Updated: 2026-11-10.
+CosmicCore is a private knowledge workspace for Markdown notes and learning. It uses Google sign-in and keeps each account's notes and organization private.
 
-A personal knowledge and learning workspace combining Markdown notes, saved references, search, and source-grounded AI conversations.
+## Current status
 
-The repository initially contained only Git metadata: no commits on `main`, application, dependencies, or design assets. This pass establishes documentation; no implementation, provisioning, installation, commit, or push is authorized.
+BUILD-04 implementation is complete: private note creation, listing, reading and editing; Markdown preview; debounced autosave with revision-conflict choices; and collections and tags. Core signed-in local flows have been exercised. BUILD-04 acceptance is still partial: two-account isolation, live quota and retry edge cases, responsive and accessibility checks, and target-host behavior remain unverified. See [project status](PROJECT_STATUS.md) and the [BUILD-04 acceptance plan](docs/03-technical/build-04-step-plan.md).
 
-## Start here
+Production capacity values and launch readiness have not been approved. The seven global mutation limits must be explicitly configured before database-backed mutations are enabled. The sample values in a developer's ignored `.env.local` are for local testing only; do not treat them as production limits or commit that file.
 
-- [Project status and milestones](PROJECT_STATUS.md)
-- [Vision](docs/01-product/vision.md), [PRD](docs/01-product/prd.md), [MVP scope](docs/01-product/mvp-scope.md), [backlog](docs/01-product/feature-backlog.md)
-- [Architecture](docs/02-architecture/system-architecture.md), [decisions](docs/02-architecture/architecture-decisions.md), [owner questions and risks](docs/02-architecture/open-questions.md)
-- [Cost assessment](docs/07-deployment/cost-analysis.md), [design system](docs/05-design/design-system.md)
+## Technology
 
-Selected stack from the brief: Next.js App Router, React, TypeScript, PostgreSQL on Neon, Drizzle ORM/Kit, Tailwind CSS, shadcn/ui, Lucide React. Package versions will be verified when implementation is authorized. Confirmed release constraints: public access, including personal use by the owner and family, a $0 starting monthly budget, and mock interviews after the initial MVP. Separate private accounts and Google sign-in are confirmed. Auth implementation, AI providers, vector strategy, and detailed launch scope remain proposed.
+- Next.js App Router, React, and TypeScript
+- PostgreSQL on Neon with Drizzle ORM
+- Neon Auth with Google sign-in
+- Tailwind CSS, Base UI, and Lucide React
+- `react-markdown` for safe Markdown preview
 
-Document statuses: Draft = incomplete working material; Proposed = recommendation awaiting a decision; Approved = explicitly accepted decision; Deferred = intentionally outside current scope. Selected technologies do not imply approval of every integration detail.
+## Local development
 
-## Overall MVP review package
+Use Node.js 22 or newer and a development Neon branch. Copy `.env.example` to `.env.local`, fill in the development database and auth settings, and configure all seven `COSMICCORE_GLOBAL_*_LIMIT` variables with non-production values before testing mutations. Follow the [auth integration notes](docs/03-technical/auth-integration-validation.md) for Google sign-in setup. Keep `.env.local` and the machine-local `.neon` project link out of commits.
 
-Read the [expanded PRD](docs/01-product/prd.md), [user workflows](docs/01-product/user-workflows.md), [diagram index](docs/02-architecture/diagrams/README.md), [security design](docs/02-architecture/security-architecture.md) and [release gates](docs/07-deployment/release-readiness.md). These are review drafts; detailed feature specifications and wireframes remain to be completed before implementation.
+```sh
+npm install
+npm run db:migrate
+npm run dev
+```
 
-The [first knowledge workflow](docs/04-features/first-workflow/spec.md) and [contracts](docs/04-features/first-workflow/contracts.md) define the next implementation-sized sequence, including validation, API boundaries and acceptance scenarios. Status: Proposed.
+For a local HTTPS development server, use `npm run dev:https`.
+
+## Checks
+
+```sh
+npm run typecheck
+npm run lint
+npm run test:mutation-rules
+npm run test:connection-lifecycle
+npm run build
+```
+
+Database acceptance scripts require an explicitly configured development database and may create temporary test fixtures. Read the relevant acceptance plan before running them. Do not run them against production.
+
+## Project documents
+
+- [Project status and next milestone](PROJECT_STATUS.md)
+- [Approved MVP scope](docs/01-product/mvp-scope.md)
+- [Architecture](docs/02-architecture/system-architecture.md)
+- [Build plans and acceptance evidence](docs/03-technical/)
+- [Cost assessment](docs/07-deployment/cost-analysis.md)

@@ -8,7 +8,7 @@ This plan breaks BUILD-04 into reviewable steps following the [approved scope](.
 
 Implement private Markdown note creation, listing, reading, editing, preview, debounced autosave, explicit revision conflicts, and flat collections/tags. Keep owner identity session-derived and all reads/writes inside existing private database boundaries and mutation receipts. No Trash/purge, search, import/export, references, AI, account deletion, offline durability, global-cap selection, deployment, or role provisioning is included in BUILD-04.
 
-Global capacity settings remain blank and fail closed. Code may be implemented without inventing values, but database-backed mutations cannot be accepted live until the owner/operator chooses all seven global values. See [operational gates](../07-deployment/build-03-operational-gates.md).
+Production global capacity decisions remain Proposed. Temporary development values are configured in ignored `.env.local` for local acceptance; they do not constitute production approval. Mutation handling fails closed when global values are missing. See [operational gates](../07-deployment/build-03-operational-gates.md).
 
 ## Steps
 
