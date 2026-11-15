@@ -1,6 +1,6 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04 scope implemented; core local acceptance passed; remaining acceptance gates open
+Status: In progress | Updated: 2026-11-15 | Phase: BUILD-04 scope implemented; core local acceptance passed; remaining acceptance gates open
 
 Latest checkpoint: BUILD-04 core signed-in local acceptance and current-state README recorded; residual acceptance and production decisions remain open, 2026-11-15. See the latest entry below; initialization status is historical.
 
