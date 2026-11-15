@@ -8,6 +8,13 @@
       "when": 1794658681082,
       "tag": "0000_app_users",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794711675371,
+      "tag": "0001_knowledge_storage",
+      "breakpoints": true
     }
   ]
 }

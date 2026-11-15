@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:https": "next dev --webpack --experimental-https",
     "build": "next build --webpack",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:check-transactions": "node --experimental-strip-types scripts/check-db-transactions.mts",
+    "db:check-ownership": "node --experimental-strip-types scripts/check-db-ownership.mts",
+    "db:check-mutations": "node --experimental-strip-types scripts/check-db-mutations.mts",
+    "test:mutation-rules": "node --experimental-strip-types --test scripts/mutation-rules.test.mts",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"

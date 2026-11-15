@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { LoaderCircle, Sparkles } from "lucide-react";
 
@@ -16,6 +16,7 @@ const errorMessages: Record<string, string> = {
 };
 
 export function SignInCard() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -44,6 +45,21 @@ export function SignInCard() {
     }
   }
 
+  async function signOutUnavailableAccount() {
+    setPending(true);
+    setLocalError(null);
+    try {
+      const result = await authClient.signOut();
+      if (result.error) throw new Error("Sign-out failed");
+      setPending(false);
+      router.replace("/auth/sign-in");
+      router.refresh();
+    } catch {
+      setLocalError("Sign-out failed. Please try again.");
+      setPending(false);
+    }
+  }
+
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="sign-in-title">
@@ -56,6 +72,11 @@ export function SignInCard() {
           {pending ? <LoaderCircle className="spin" size={18} /> : <GoogleMark />}
           {pending ? "Opening Google…" : "Continue with Google"}
         </Button>
+        {queryError === "account_unavailable" && (
+          <Button type="button" variant="outline" onClick={signOutUnavailableAccount} disabled={pending}>
+            Sign out to use another account
+          </Button>
+        )}
         <p className="auth-note">CosmicCore stores a private application profile linked to your Google identity. Your notes are never shared with other accounts.</p>
       </section>
     </main>

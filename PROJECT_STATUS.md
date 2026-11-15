@@ -2,6 +2,8 @@
 
 Status: Draft | Updated: 2026-11-10 | Phase: architecture initialization
 
+Latest checkpoint: BUILD-03 Step 4c — owner's quota/receipt and cleanup checks passed; ready for Git checkpoint review, 2026-11-15. See the latest entry below; initialization status is historical.
+
 ## Completed this session
 
 Repository inspection: empty working tree except .git; main has no commits. Created the requested planning tree, initial vision, proposed MVP, prioritized backlog, architecture overview, decision register, risk register, design direction, and cost assessment. Technical and feature files are intentionally lightweight drafts. No application exists.
@@ -211,3 +213,91 @@ Owner requested a compact checkpoint and PR with Codex co-authorship. Package th
 Current state: Google sign-in integration, protected workspace and internal identity migration are implemented; knowledge features remain previews. Open checks: apply the migration, exercise Google sign-in/sign-out/reload and two-account isolation, validate session revocation, and configure production OAuth. Review the authenticated unavailable-account redirect path during runtime acceptance: sign-in currently redirects any existing session back to the workspace. Existing dependency peer/advisory findings remain recorded above.
 
 Smallest next milestone: apply and verify the development migration, then complete one real Google sign-in/sign-out/reload flow before BUILD-03. PR publication is verified through GitHub, not inferred from this handoff.
+
+## Safari local sign-in investigation — 2026-11-15
+
+Observed Google account chooser opening in Safari, followed by the owner's reported return to the public “Welcome back” sign-in page on HTTP localhost. Reproduced the public sign-in state in Safari. The OAuth API returned 200 with a redirect URL, and following that URL reached Google. The installed SDK requires Secure cookies for its OAuth challenge and session; Safari's lack of an HTTP localhost exception is the leading cause of the missing session. No authenticated dashboard success has been established, and callback/database causes have not been fully ruled out.
+
+Added `npm run dev:https` and documented Safari's HTTPS requirement and owner-controlled certificate trust setup. No certificate authority installed, database migration applied, commit or push performed. Next smallest milestone: start a trusted local HTTPS server, repeat Google sign-in in Safari and inspect dashboard/reload behavior; verify the application identity migration if dashboard entry fails afterward.
+
+## Cross-browser sign-in root cause — 2026-11-15
+
+The owner confirmed the failure also occurs in Chrome. A temporary diagnostic found a Chrome session-token cookie but no valid upstream session; changing the Origin header did not restore it. The decisive finding was that root `proxy.ts` was ignored because this project uses `src/app`: existing production middleware/function manifests had no registered proxy, and a request did not execute temporary proxy instrumentation. Consequently Neon's OAuth verifier exchange never ran, and the server session guard returned users to sign-in. Moved the unchanged auth proxy configuration to `src/proxy.ts`. Next.js now compiles the proxy and a signed-out request to a diagnostic protected path receives 307 to sign-in. Removed temporary diagnostic endpoint and instrumentation. The prior Safari transport explanation is an additional local constraint, not the complete cross-browser root cause.
+
+Read-only SQL also confirmed `public.app_users` is absent. That is a separate authenticated dashboard blocker; no migration was applied in this diagnosis. Smallest next milestone: apply the reviewed development identity migration and verify a fresh HTTPS Google round trip, dashboard entry, reload and sign-out. No commit or push performed.
+
+Validation: the same build-manifest assertion failed before the move and passed afterward. Production build now lists “Proxy (Middleware)”; lint, typecheck and Git whitespace checks pass. A full authenticated Google-to-dashboard flow remains unverified pending the database migration and a new sign-in.
+
+## Development identity migration applied — 2026-11-15
+
+Owner explicitly authorized applying the migration. Verified that the direct migration URL targets the same database as the application connection, then ran `npm run db:migrate` successfully. Verified `public.app_users` through the application connection: nine columns, primary key, active/deletion-pending/blocked status constraint, unique issuer/subject index and email index. Drizzle records one applied migration. Managed auth tables were not modified by this migration. No additional domain tables, commit or push were created.
+
+The missing identity-table blocker is resolved. The owner subsequently confirmed the dashboard is working. Session restoration after reload, sign-out/sign-in, and two-account isolation remain unverified.
+
+## Authentication fix PR checkpoint — 2026-11-15
+
+Owner requested a PR with Codex co-authorship for the proxy location fix, local HTTPS command and troubleshooting/migration evidence. Dashboard access is owner-confirmed after the proxy fix and development migration. No new migration is introduced by this PR; other environments still require the existing identity migration. Build, lint, typecheck, proxy registration and documentation-link checks passed during this work. Next smallest milestone: verify dashboard reload and sign-out/sign-in, then account isolation. Machine-local Neon configuration and environment/certificate secrets remain excluded.
+
+## BUILD-03 Step 2 — local schema and migration review — 2026-11-15
+
+Owner requested BUILD-03 in individually approved steps with manual operations delegated to them. Owner reported the requested sign-out, protected dashboard, sign-in/reload and available account-switching checks working as expected; this is owner-reported browser evidence, not proof of private-data isolation. Owner then explicitly authorized Step 2. Added ten application tables for notes, references, collections, tags, owner-matched associations, account/global usage and 24-hour mutation receipts. Added size/revision/Trash constraints, generated normalized names/content-byte counts and relevant indexes. Generated additive `0001_knowledge_storage.sql` and snapshot; existing identity/auth tables are unchanged. See [schema review](docs/03-technical/build-03-schema-review.md) for exact boundaries and manual handoff.
+
+Validation: migration generation, TypeScript, lint, production build and Git whitespace checks pass; SQL reviewed for referenced-key ordering and additive scope. No local PostgreSQL executable is available; actual migration execution and database constraints/concurrency are unverified. Quota ceilings, active-account checks, URL parsing, transactions, replay/cleanup and owner-scoped service enforcement remain pending. No new UI or endpoint accesses these tables. No packages installed, database migration applied, provisioning, commit or push performed. Existing untracked `.neon` file preserved.
+
+Smallest next milestone: owner review/approval of Step 3, then owner runs the existing `npm run db:migrate` against the intended development database and reports redacted results. Verify tables/migration tracking before asking to start Step 4. Do not continue automatically.
+
+## BUILD-03 Step 3 — manual migration verified — 2026-11-15
+
+Owner ran `npm run db:migrate` and reported that the shell prompt returned after the WebSocket driver warning. Read-only queries through the application's existing development connection confirmed all ten new tables alongside app_users, two Drizzle migration records and a stored hash matching the local `0001_knowledge_storage.sql` SHA-256. The migration is applied despite the absence of a reported success message. No application data was read or modified during verification. The Neon connector could not access the linked project; verification used the existing application connection instead.
+
+Smallest next milestone: obtain explicit approval for Step 4 (authorized data access, transaction driver, quota enforcement and retry protection). Actual isolation, rollback and concurrency tests remain pending. No Step 4 implementation, additional migration, commit or push performed.
+
+## BUILD-03 Step 4a — transaction support — 2026-11-15
+
+Owner approved proceeding with Step 4 after discussion of transaction support as the first small part, preserving approval pauses and manual verification. Added a server-only `withDbTransaction` entry point over a per-operation Neon WebSocket Client/Drizzle transaction, bounded connection/query/lock/idle settings, finally-based connection cleanup and content-free connection diagnostics. Existing HTTP identity access is unchanged. Added `npm run db:check-transactions` for the owner to verify temporary-table commit, synthetic-identity rollback after callback and SQL failures, and subsequent successful transactions. No permanent test records are intended to commit. Native WebSocket and the manual TypeScript runner require a current Node 22+ runtime; local Node is 25.8.1. No new dependency or migration.
+
+Verification: TypeScript, lint, production build, script syntax and Git whitespace checks pass. A TypeScript check raced the build's generated-type cleanup; rerunning after build passed. Live database transaction checks were deliberately left to the owner; connection-loss behavior, authorization/isolation, quota races and receipt behavior remain unverified. See [transaction support and manual check](docs/03-technical/build-03-transactions.md). No new public feature/action, database operation, package install, provisioning, commit or push performed.
+
+Smallest next milestone: owner runs `npm run db:check-transactions` in the development environment and reports the result; then ask approval before Step 4b (active-account checks and owner-scoped data services). Quota and receipt enforcement follow in separately reviewed parts. Do not mark BUILD-03 or Step 4 complete yet.
+
+## BUILD-03 Step 4a — owner runtime verification passed — 2026-11-15
+
+Owner supplied all three PASS lines and the final success message from `npm run db:check-transactions`, confirming the manual development commit and rollback scenarios described above. Node's CommonJS/ES-module reparse warning was informational; no package-wide module change was made. This evidence does not establish connection-loss handling, ownership isolation or quota/receipt concurrency.
+
+Smallest next milestone: obtain owner approval for Step 4b — active-account checks and owner-scoped data services. No further implementation, database operation, commit or push performed in recording this result.
+
+## BUILD-03 Step 4b — active accounts and private reads — 2026-11-15
+
+Owner explicitly approved this part. Added a server-only session-derived private-data wrapper and fixed resource getters for notes, references, collections and tags. The shared database core locks the internal account FOR SHARE, rejects nonactive/missing accounts, enforces owner predicates and hides Trash. Valid foreign/missing IDs share a generic NOT_FOUND; malformed UUIDs fail validation. Added bounded owned collection/tag validation with target locks and a manual two-owner database check that rolls back all synthetic fixtures, including five cross-owner relationship constraint cases and blocked/deletion-pending account checks.
+
+Hardened identity profile upsert to update existing mappings only while active. Fixed the existing-session unavailable-account redirect loop and supplied sign-out for account switching. No feature mutation, new endpoint, quota/receipt enforcement, schema change or migration was added. Private getters are internal primitives, not complete feature APIs. Existing unrelated/uncommitted work and `.neon` remain preserved.
+
+Verification: TypeScript, lint (no warnings), production build, script syntax and documentation/Git whitespace checks pass. Agent did not run live database checks. Actual two-owner core behavior awaits owner execution; session-backed blocked-account UI, concurrent block/write behavior and quota/receipt races remain unverified. See [Step 4b review/manual check](docs/03-technical/build-03-ownership.md).
+
+Smallest next milestone: owner runs `npm run db:check-ownership` on development and confirms normal dashboard reload/sign-out/sign-in. After results, ask approval before quota and retry enforcement. Step 4 and BUILD-03 remain incomplete. No package installation, provisioning, database operation, commit or push performed.
+
+## BUILD-03 Step 4b — owner runtime verification passed — 2026-11-15
+
+Owner supplied the three ownership PASS lines and confirmed the final rollback success message plus normal dashboard reload/sign-out/sign-in. Shared-core own/foreign access, association constraints, Trash exclusion and nonactive-account denial passed the manual script; all synthetic fixtures were rolled back. Concurrent blocking, blocked-session UI and quota/receipt concurrency remain unverified.
+
+Smallest next milestone: obtain explicit approval for Step 4c — atomic per-account/global quota enforcement and mutation retry receipts, with manual checks supplied to the owner. No implementation beyond Step 4b or database operation performed while recording these results. Step 4 and BUILD-03 remain incomplete.
+
+## BUILD-03 Step 4c — quota and retry coordinator — 2026-11-15
+
+Owner explicitly approved this part. Added a server-only session-derived mutation wrapper, canonical bounded JSON/SHA-256 fingerprints, owner mutation serialization, active-account rechecks, 24-hour owner/operation/UUID receipts and mandatory resource lifecycle authorization on replay. Counter reservations lock global then account rows in stable order; count/byte growth, mutation-rate caps, safe arithmetic and underflow checks share the feature/receipt transaction. Releases and matching receipt replays do not double-charge/decrement. Receipt results are whitelisted metadata only. Trusted feature handlers must still provide validated/scoped writes and accurate deltas; no feature action or content UI is exposed.
+
+Added initial account limits from the feature proposals and explicit required global-capacity variables in `.env.example`, without setting environment values or guessing public capacity. Added three passing pure rule tests and `npm run db:check-mutations` for the owner. That manual script rolls back storage/receipt cases, then temporarily commits synthetic identities and isolated future-minute counters for independent-connection rate/receipt races, with cleanup in finally and absence assertions. No real account content is read. The agent did not execute database tests.
+
+Validation: three pure tests, TypeScript, lint (no warnings), production build, script syntax, relative links and Git whitespace pass. Removed only byte-identical duplicate files in ignored `.next/types` that caused a generated-type collision. Existing unrelated work and machine-local configuration remain preserved. No new schema/migration, package installation, provisioning, database operation, commit or push performed.
+
+Smallest next milestone: owner runs `npm run db:check-mutations` and supplies the final cleanup/success output. Preserve the printed run ID on failure/interruption. Then request approval for final BUILD-03 acceptance work; concurrent storage-specific races, account-block/write races, uncertain commit/connection failures, target-host behavior, role separation and public action checks remain open. Global capacities and receipt/rate-row physical cleanup are unresolved public-release gates; reads and current identity access still work without the new limit variables. Step 4c runtime acceptance and BUILD-03 are not yet complete. See [quota/retry review and manual check](docs/03-technical/build-03-mutations.md).
+
+## BUILD-03 Step 4c — owner runtime verification passed — 2026-11-15
+
+Owner supplied all seven PASS lines, committed-fixture cleanup and final success for run `0e5745cd-97cc-4a44-ad23-0c4801428af2`. The manual script verified replay/payload/expiry/Trash behavior, rollback and underflow, one-time release and blocked replay, concurrent duplicate requests, account/global rate caps and receipt isolation across owners. Synthetic fixtures were removed. This completes the requested manual checks for the current Step 4c checkpoint, not every BUILD-03/public-release gate.
+
+Owner requested a near-term commit checkpoint with limited remaining usage. Documentation/results and final diff are prepared for review; commit/push require explicit checkpoint authorization. No further feature work is needed before committing current progress. Preserve `.neon` and all secrets outside the commit. Next implementation milestone, after owner approval, remains final BUILD-03 acceptance and unresolved operational limits/cleanup; do not silently start BUILD-04. No commit or push performed while recording these results.
+
+## BUILD-03 Git checkpoint authorization — 2026-11-15
+
+Owner explicitly authorized committing and pushing the current BUILD-03 checkpoint and requested Codex co-authorship on every commit. Use `Co-authored-by: Codex <noreply@openai.com>` for this and subsequent session commits. Package only the reviewed source, migration, check scripts, example configuration and documentation. Keep `.neon`, local environment/certificate files and secrets untracked. Prior passing automated checks and the owner's successful manual checks are recorded above. Commit/push success must be confirmed from Git, not inferred from this authorization entry. No new feature or final acceptance work is authorized by the Git checkpoint.

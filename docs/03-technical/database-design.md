@@ -2,6 +2,8 @@
 
 Status: Draft — conceptual design
 
+Implementation checkpoint: BUILD-03 Steps 2–3 add the knowledge-storage schema and owner-applied development migration; tables and migration hash are verified read-only. See [schema review](build-03-schema-review.md). Transaction, [private-read ownership](build-03-ownership.md) and [quota/receipt coordination](build-03-mutations.md) checks passed the owner's manual runs, including fixture cleanup. Global capacities, metadata cleanup and additional final acceptance remain unresolved. Future chat/indexing entities below remain conceptual.
+
 Proposed entities: users, notes, references, collections, tags, note_tags, reference_tags, knowledge_links, conversations, messages, source_documents, chunks, generation_attempts and quota_usage. Tables are conceptual, not final DDL. Avoid a workspace/membership abstraction until sharing requirements justify it.
 
 User-owned rows carry owner_id; foreign keys and composite uniqueness must prevent links across owners. Index owner_id with common updated_at/filter fields; use PostgreSQL full-text indexes after representative query planning. UUID keys and UTC timestamps are proposed. Notes carry an optimistic revision; chunks carry source revision, content hash, embedding model and dimension. Message source mappings must reference the exact retrieved version.
