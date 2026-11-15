@@ -39,6 +39,16 @@ Authentication provider selection is approved, while SDK integration, session li
 | Always available services?     | Interactive app only; tolerate pilot cold starts                                      | Availability guarantees require paid resources and monitoring                                                                         | Before deployment                                                          |
 | Data retention and recovery?   | Minimize retention; define explicit deletion and backup policy                        | Longer history/backup windows retain private content and cost storage                                                                 | Before release                                                             |
 
+## BUILD-03 operational decisions — Proposed
+
+| Question | Recommended default | Remaining choice / consequence | Needed before |
+| --- | --- | --- | --- |
+| Global application capacities? | Choose per-database caps from a bounded pilot workload and verified account allowances | Exact seven app caps and exhaustion behavior; provider compute/storage caps are separate | Enabling application mutations |
+| Receipt/rate-counter cleanup? | Bounded, idempotent cleanup within approved seven-day operational-metadata ceiling | Schedule, batch size, retry/alert owner and exact rate-row expiry | Public or sustained use |
+| Database role separation? | Least-privilege runtime login plus controlled migration credential | Exact grants, schema ownership, default privileges and migration execution context | Public deployment |
+
+See [BUILD-03 operational gates](../07-deployment/build-03-operational-gates.md). These choices remain Proposed; no limits, cleanup schedule, or database roles have been selected or provisioned.
+
 ## Risk register
 
 | Risk                                     | Mitigation / validation gate                                                                                                                                                                                                             |

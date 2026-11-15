@@ -6,6 +6,8 @@ Local: Next.js development process, local PostgreSQL where practical, optional O
 
 Preferred production: Vercel Next.js Node runtime plus region-aligned Neon PostgreSQL. Use pooled application connections and a separately controlled migration connection. Verify driver transaction support and connection limits before selection. No always-on worker is assumed.
 
+BUILD-03 records the proposed runtime/migration role split, global application capacities, and receipt/rate-counter cleanup requirements in [operational gates](build-03-operational-gates.md). No production roles, capacity values, or cleanup schedule have been configured.
+
 Future CI: typecheck/lint/tests/build; review generated Drizzle migrations; apply migrations once through a controlled deployment step, not per request or function startup. Prefer expand/contract changes; rehearse restore and rollback compatibility. GitHub Actions quotas and private repository deployment permissions are unverified launch checks.
 
 Environment categories: database URL, auth secret/origin/OAuth credentials, provider API key/model IDs, quotas and timeouts. Only intentionally public settings receive a public client prefix. Never log secret values or note/chat content. Confirm cookie, trusted-origin, callback and preview settings per environment.

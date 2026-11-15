@@ -74,13 +74,13 @@ function metadata(result: ReceiptMetadata) {
   };
 }
 
-async function reserveUsage(tx: DbTransaction, ownerId: string, changes: UsageChanges, policy: QuotaPolicy, now: Date) {
+async function reserveUsage(tx: DbTransaction, ownerId: string, changes: UsageChanges, policy: QuotaPolicy, now: Date, testStorageWindow?: Date) {
   const deltas: Partial<Record<QuotaMetric, number>> = { ...changes, mutations_count: 1 };
   for (const [metric, delta] of Object.entries(changes)) {
     if (!(quotaMetrics as readonly string[]).includes(metric) || metric === "mutations_count" || !Number.isSafeInteger(delta)) throw new MutationError("VALIDATION");
   }
   const metrics = quotaMetrics.filter((metric) => deltas[metric] !== undefined).sort();
-  const windowFor = (metric: QuotaMetric) => new Date(metric === "mutations_count" ? Math.floor(now.getTime() / 60_000) * 60_000 : 0);
+  const windowFor = (metric: QuotaMetric) => new Date(metric === "mutations_count" ? Math.floor(now.getTime() / 60_000) * 60_000 : (testStorageWindow?.getTime() ?? 0));
 
   // Acquire every global row before any per-account usage row, in stable order.
   // Inserts use the same order, including competing first-use initialization.
@@ -123,7 +123,10 @@ async function reserveUsage(tx: DbTransaction, ownerId: string, changes: UsageCh
 
 // Internal only; the server-only wrapper supplies identity, configuration and a
 // real database clock. testNow exists solely for isolated manual test windows.
-export async function executeMutation(tx: DbTransaction, ownerId: string, request: MutationRequest, policy: QuotaPolicy, handler: MutationHandler, testNow?: Date) {
+export async function executeMutation(tx: DbTransaction, ownerId: string, request: MutationRequest, policy: QuotaPolicy, handler: MutationHandler, testNow?: Date, testStorageWindow?: Date) {
+  // Manual acceptance only: isolate committed storage races from live lifetime
+  // counters. Neither override is exposed by the server-only application wrapper.
+  if (testStorageWindow && (!testNow || !Number.isFinite(testStorageWindow.getTime()) || testStorageWindow.getTime() < Date.UTC(2100, 0, 1))) throw new MutationError("VALIDATION");
   if (!uuid.test(ownerId) || !uuid.test(request.mutationId) || !/^[a-z][a-z_]{0,63}$/.test(request.operation)) throw new MutationError("VALIDATION");
   const payloadHash = fingerprintPayload(request.payload);
   const mutationId = request.mutationId.toLowerCase();
@@ -145,7 +148,7 @@ export async function executeMutation(tx: DbTransaction, ownerId: string, reques
     return { ...result, replayed: true };
   }
   const prepared = await handler.prepare(tx, ownerId, data);
-  await reserveUsage(tx, ownerId, prepared.changes, policy, now);
+  await reserveUsage(tx, ownerId, prepared.changes, policy, now, testStorageWindow);
   const result = metadata(await prepared.apply());
   await handler.authorizeReplay(data, result);
   await tx.insert(mutationReceipts).values({

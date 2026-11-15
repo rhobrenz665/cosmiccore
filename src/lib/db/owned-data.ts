@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import { appUsers, collections, notes, references, tags } from "./schema.ts";
 import type { DbTransaction } from "./transaction-session.ts";
@@ -31,6 +31,13 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
   // once a block commits, later operations see and reject the blocked status.
 
   return {
+    async listNotes() {
+      return tx.select({
+        id: notes.id, title: notes.title, body: notes.body, revision: notes.revision,
+        createdAt: notes.createdAt, updatedAt: notes.updatedAt,
+      }).from(notes).where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt)))
+        .orderBy(desc(notes.updatedAt), desc(notes.id)).limit(200);
+    },
     async getNote(id: string) {
       validateId(id);
       const [note] = await tx.select({

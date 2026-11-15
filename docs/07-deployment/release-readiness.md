@@ -10,12 +10,12 @@ Status: Proposed — none verified by a running application
 | Capture reliability | Reload durability, concurrent-edit conflict, stale-delete and interrupted save tests | Not implemented |
 | Data portability | UTF-8 import validation, owner-only bounded export and restore expectations | Export packaging/limits pending |
 | AI completeness | Selected free provider, privacy disclosure, evaluated retrieval/support/citations, failure handling | Blocked on provider feasibility |
-| Spending/abuse | User/global atomic quotas, resource limits, kill switch, exhaustion behavior and load measurement | Exact limits pending |
+| Spending/abuse | User/global atomic quotas, provider resource limits, kill switch, exhaustion behavior and load measurement | Account caps are coded; global values and verified provider headroom remain pending; see [BUILD-03 operational gates](build-03-operational-gates.md) |
 | Accessibility | Keyboard, screen-reader labels, contrast, mobile, zoom, reduced motion and all appearances | Wireframes/implementation pending |
 | Deployment | Isolated previews, reviewed migration, eligible hosting, secret protection, build/checks | No infrastructure |
 | Deletion/privacy | Tested 7-day note Trash/restore/expiry, account access blocking and bounded live-data cleanup | Policies confirmed; implementation and remaining history policy pending |
 | Disaster recovery (future) | Independent backups, expiry, restore drill and deletion reconciliation | Deferred by owner; not an MVP release gate |
-| Operations | Metadata-only logs, usage/error monitoring, basic incident and rollback runbook | Draft plan only |
+| Operations | Metadata-only logs, receipt/rate cleanup, role separation, usage/error monitoring and basic incident/rollback runbook | Cleanup schedule and DB privileges unverified; see [BUILD-03 operational gates](build-03-operational-gates.md) |
 
 ## Release stages
 

@@ -1,8 +1,8 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-10 | Phase: architecture initialization
+Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.2 implemented; validation pending
 
-Latest checkpoint: BUILD-03 Step 4c — owner's quota/receipt and cleanup checks passed; ready for Git checkpoint review, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04.2 editor and safe Markdown preview implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -301,3 +301,41 @@ Owner requested a near-term commit checkpoint with limited remaining usage. Docu
 ## BUILD-03 Git checkpoint authorization — 2026-11-15
 
 Owner explicitly authorized committing and pushing the current BUILD-03 checkpoint and requested Codex co-authorship on every commit. Use `Co-authored-by: Codex <noreply@openai.com>` for this and subsequent session commits. Package only the reviewed source, migration, check scripts, example configuration and documentation. Keep `.neon`, local environment/certificate files and secrets untracked. Prior passing automated checks and the owner's successful manual checks are recorded above. Commit/push success must be confirmed from Git, not inferred from this authorization entry. No new feature or final acceptance work is authorized by the Git checkpoint.
+
+## BUILD-03 — final database acceptance prepared — 2026-11-15
+
+Owner authorized task 1: final database acceptance for storage races, account-block/write ordering and connection failures. Added `npm run db:check-acceptance` with four account/global count/byte races, both observed lifecycle lock orderings, simulated lost-response/precommit retry reconciliation, and an own-session idle disconnect followed by rollback verification and retry. The script temporarily commits only synthetic identities/content and exclusively reserved future accounting windows, with finally cleanup and absence assertions. An internal storage-window override isolates these tests from live lifetime counters; the server-only mutation wrapper never supplies it. No real account content is queried. See [acceptance instructions and evidence boundaries](docs/03-technical/build-03-acceptance.md).
+
+Extracted the existing connection connect/work/finally-close lifecycle into an internal helper and added four deterministic tests for failure propagation, no automatic retry and acknowledged-success preservation on close failure. These injected tests are not driver/socket fault evidence. Production accounting, configured timeouts and public entry points retain their prior behavior. No feature UI, migration, package installation, environment change, provisioning or database operation performed by the agent.
+
+At preparation, validation included production build, TypeScript, lint, all seven then-existing local tests, script syntax, relative documentation links and Git whitespace checks. Live acceptance was pending at that checkpoint; the completed run is recorded below. Socket loss exactly during COMMIT, target-host behavior, role separation, global capacities, physical metadata cleanup and public-action/session UI checks remain explicit unresolved gates; BUILD-04 had not started.
+
+Git inspection confirmed checkpoint commit `05a4519` with requested Codex co-authorship and a branch matching its local remote-tracking reference; no network push verification was performed this turn. Existing machine-local `.neon` remains untouched and untracked. No new commit or push performed.
+
+Preparation checkpoint: owner-run acceptance output and investigation of failures were pending. That checkpoint is superseded by the completed run recorded below.
+
+## BUILD-03 — final database acceptance passed — 2026-11-15
+
+The first live attempt, run `5dacfc74-4c81-4eb3-aebc-7035d73539dd`, failed during fixture setup and reported connection cleanup failure. A read-only, run-scoped lookup found no fixture identities; setup inserts identities and reserved ledger rows in one transaction, so no committed fixture cleanup was needed. The first run's underlying transport error was hidden by the acceptance script. Added redacted error-chain reporting for future failures.
+
+Reran acceptance as `69cac6ef-2d2d-4801-ade9-b2163e16cf27`. All eight checks passed: concurrent account/global count and byte reservations, both account-block/write orderings, retry reconciliation, and own-session disconnect rollback/retry. Synthetic fixture cleanup and final success both passed. The connection error log was expected from the deliberate idle-session termination. The informational module reparse warning remains. All six deterministic connection lifecycle tests also pass.
+
+BUILD-03 final acceptance is complete for the tested development database. Actual socket loss exactly during COMMIT and target-host runtime remain unverified. Global capacity limits, receipt/rate-counter physical cleanup and database role separation remain operational gates; blocked-session UI and future public-action authorization also remain open. BUILD-04 has not started.
+
+## BUILD-03 — operational gates documented — 2026-11-15
+
+Added [BUILD-03 operational gates](docs/07-deployment/build-03-operational-gates.md), verified against current official Neon/PostgreSQL documentation. Recorded the current seven required global application caps and their fail-closed behavior; distinguished app counters from provider compute/storage/transfer limits. Documented bounded receipt/rate-counter cleanup under the approved seven-day operational metadata ceiling, including preservation of lifetime counters. Specified a Proposed least-privilege runtime/migration role split, noting that current URL variables do not prove distinct database privileges. Added open-question and release-readiness links. No environment values, schedule, roles, services, or cleanup mechanism were configured.
+
+Unresolved: owner/operator must choose the pilot global caps and exhaustion behavior; cleanup executor/cadence/batch/alerts remain Proposed; database grants and migration compatibility require environment validation. Actual socket loss during COMMIT and target-host runtime remain unverified.
+
+The owner requested a step-by-step feature plan and asked to implement one step at a time, with a summary after each implemented feature. Added [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md) covering private note create/list/read, safe editor/preview, serialized autosave/conflicts, collections/tags, and acceptance handoff. Implemented BUILD-04.1: owner-scoped note listing and read, and explicit idempotent blank-note creation with a no-write-on-GET starter route. The index/read UI shows loading/error/empty content states and raw Markdown source as text; editing is deferred to BUILD-04.2. No application tests or runtime database check were run for BUILD-04.1 in this step. Operational limits, cleanup execution, and role grants remain Proposed. No commit or push performed.
+
+Smallest next milestone: verify BUILD-04.1 if requested, then implement BUILD-04.2 — editor and safe Markdown preview — as a separate step. Global capacity values remain unset, so live mutation acceptance requires a later explicit capacity decision.
+
+## BUILD-04 Step 2 — note editor and safe Markdown preview — 2026-11-15
+
+Owner authorized proceeding one feature step at a time and requested a summary after each step. Implemented BUILD-04.2 on the private note read page: controlled title/body fields, client-side title code-point and body UTF-8 byte feedback, NUL/size validation messages, desktop live preview, mobile Edit/Preview controls, and focus mode with an exit action. Added `react-markdown` 10.1.0. The renderer skips raw HTML, allows only HTTP(S), mailto and relative safe links, opens external web links with `noopener noreferrer`, and displays image alt text without fetching remote images. CommonMark only; no GFM plugin. See [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md).
+
+This step edits only local component state: changes are explicitly labeled unsaved and will be discarded on refresh/navigation. Persistence, autosave, and conflicts are deferred to BUILD-04.3. No tests, typecheck, browser/runtime checks, or database checks were run in this step. `git diff --check` passed. Dependency installation succeeded with an existing peer-dependency resolution warning in the auth dependency tree; unrelated audit findings were not changed. Existing `.neon` and unrelated in-progress BUILD-03 files remain untouched; no commit or push performed.
+
+Smallest next milestone: pause for owner review of this step; then proceed to BUILD-04.3 only when directed. BUILD-04.1 acceptance remains unverified, global capacity values remain unset, and operational cleanup/role grants remain Proposed.

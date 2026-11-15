@@ -4,6 +4,8 @@ Status: Owner's manual database check passed, including concurrent races and fix
 
 Owner supplied all seven PASS lines plus cleanup and final success for run `0e5745cd-97cc-4a44-ad23-0c4801428af2`. The script's storage/receipt rollback, replay/lifecycle, concurrent account/global rate limits and owner-isolated receipt scenarios passed. This does not establish the additional final acceptance cases listed below.
 
+Follow-up: [final database acceptance checks](build-03-acceptance.md) passed on development on 2026-11-15. Remaining deployment choices are documented in [operational gates](../07-deployment/build-03-operational-gates.md).
+
 Owner approved this bounded part after the [ownership checks](build-03-ownership.md) passed. No new feature endpoint or content UI is enabled. Pause for manual results before the next step.
 
 ## Service boundary and transaction order
@@ -44,6 +46,6 @@ The [check script](../../scripts/check-db-mutations.mts) first rolls back storag
 
 Expect several PASS lines, `Synthetic committed race fixtures cleaned up.`, then `Mutation checks passed. Synthetic fixtures were removed.` The TypeScript module warning may appear as before. Let the command finish; interruption/network failure can leave committed race fixtures. Keep the printed run ID if any check or cleanup fails and report the output; do not reset the database or rerun migrations. Do not claim success from only the early PASS lines.
 
-Agent-run local validation: three pure rule tests (fingerprints/input bounds/configuration), TypeScript, lint, production build, script syntax, relative links and Git whitespace. Agent does not execute the live database check. Concurrent storage-specific races, account-block/write races, uncertain network commit/cleanup, public action authorization and target-host runtime behavior still need final acceptance or feature-level tests. No schema/migration, provider, package installation, commit or push is part of this work.
+At the Step 4c implementation checkpoint, three pure rule tests (fingerprints/input bounds/configuration), TypeScript, lint, production build, script syntax, relative links and Git whitespace passed. The owner-run Step 4c database check and the later final acceptance both passed on development with synthetic fixture cleanup. Actual socket loss during COMMIT, public-action authorization and target-host runtime behavior remain unverified. No schema/migration, provider, package installation, commit or push was part of the Step 4c implementation.
 
 References checked 2026-11-15: [PostgreSQL transaction locks](https://www.postgresql.org/docs/current/explicit-locking.html), [Drizzle inserts/conflicts](https://orm.drizzle.team/docs/insert), [Node SHA-256 API](https://nodejs.org/api/crypto.html#cryptocreatehashalgorithm-options).
