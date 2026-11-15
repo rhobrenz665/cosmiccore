@@ -5,10 +5,13 @@ import { auth } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function SignInPage() {
+export default async function SignInPage({ searchParams }: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
+  const params = await searchParams;
   const { data: session } = await auth.getSession();
 
-  if (session?.user) {
+  if (session?.user && params.error !== "account_unavailable") {
     redirect("/dashboard");
   }
 

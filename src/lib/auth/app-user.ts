@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 
 import { appUsers, type AppUser } from "@/lib/db/schema";
 import { db } from "@/lib/db/client";
@@ -36,11 +37,12 @@ export async function requireAppUser(): Promise<AppUser> {
         avatarUrl: user.image,
         updatedAt: new Date(),
       },
+      setWhere: eq(appUsers.status, "active"),
     })
     .returning();
 
   if (!appUser) {
-    throw new Error("Authenticated user mapping did not return an application user.");
+    redirect("/auth/sign-in?error=account_unavailable");
   }
 
   if (appUser.status !== "active") {
