@@ -1,8 +1,8 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.4 implemented; validation pending
+Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04 source implemented; local verification passed; manual feature acceptance pending
 
-Latest checkpoint: BUILD-04.4 collections, tags, and note associations implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04.5 acceptance handoff recorded; local checks passed, signed-in/database-backed feature acceptance pending, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -360,4 +360,14 @@ Owner said to continue and specified that each feature use a new branch. Verifie
 
 No tests, typecheck, build, browser/runtime checks, or database checks were run for BUILD-04.4. This is implementation status, not acceptance evidence. `git diff --check` and relative documentation-link checks passed. Global limits remain unset; live mutations therefore remain fail-closed. BUILD-04.1 through BUILD-04.4 still require the planned acceptance handoff. See [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md).
 
-Smallest next milestone: pause for owner review; then complete BUILD-04.5 acceptance handoff, including investigation and scoped recovery of run `8eee10f2-b295-4f47-a6d2-3ad370ee5733`. Do not claim the failed database run was cleaned up.
+Smallest next milestone: in the development environment, set the required global mutation limits, then exercise signed-in note create/read/edit/autosave/conflict and collection/tag flows with synthetic data and confirmed cleanup. Keep target-host, accessibility, hostile-Markdown, global-cap exhaustion, and deployment acceptance explicitly open unless tested.
+
+## BUILD-04 Step 5 — acceptance handoff — 2026-11-15
+
+Owner approved proceeding with the final planned BUILD-04 step and instructed that BUILD-03 should be ignored for this work. Reviewed the current BUILD-04 implementation and acceptance matrix without performing further BUILD-03 database operations. Fixed issues exposed during verification: Node's direct mutation-rule test runner now resolves the shared tag limit by relative path; autosave state avoids render-time ref reads and handles the conflict result as a discriminated payload; the note page constructs JSX outside its data-fetch catch; and the acceptance script's error-chain type guard now typechecks without changing its runtime behavior.
+
+Verification passed: `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules` (3 passed), `npm run test:connection-lifecycle` (6 passed), and `npm run build`. A temporary production server on loopback returned 200 for `/`; signed-out `/notes` and `/notes/new` redirected to `/auth/sign-in`. The server was stopped after the checks. `git diff --check` and documentation relative-link checks passed.
+
+Not verified: signed-in note creation/read/isolation, autosave and same-revision multi-tab conflicts, collection/tag CRUD and revision bump behavior, database quota/receipt mutations, hostile Markdown in an actual browser, mobile/keyboard/accessibility behavior, or target-host behavior. Live feature mutations were not attempted because the seven required global mutation limit values are unset and the application intentionally fails closed. Thus the handoff is recorded, but BUILD-04 is not marked fully accepted. No database writes, provisioning, commit, or push were performed in this step. The pre-existing machine-local `.neon` remains untracked and untouched.
+
+Smallest next milestone: configure the approved development mutation caps, then run the signed-in BUILD-04 manual acceptance flows with synthetic fixtures and verify their cleanup. No further feature step is planned after BUILD-04.5.

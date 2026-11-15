@@ -31,8 +31,10 @@ function sameDraft(left: Draft, right: Draft) {
 export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
+  const [acknowledgedDraft, setAcknowledgedDraft] = useState<Draft>(() => canonicalDraft(initialDraft));
   const [collections, setCollections] = useState(initialCollections);
   const [tags, setTags] = useState(initialTags);
+  const [hasRetryRequest, setHasRetryRequest] = useState(false);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [focusMode, setFocusMode] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "saved" });
@@ -40,6 +42,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   const acknowledgedRef = useRef<Draft>(canonicalDraft(draft));
   const revisionRef = useRef(initialRevision);
   const retryRequestRef = useRef<SaveRequest | null>(null);
+  const pumpSaveRef = useRef<() => Promise<void>>(async () => {});
   const inFlightRef = useRef(false);
   const conflictRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,7 +51,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   const bodyBytes = new TextEncoder().encode(draft.body).byteLength;
   const titleError = titleCodePoints > MAX_TITLE_CODE_POINTS || draft.title.includes("\0");
   const bodyError = bodyBytes > MAX_BODY_BYTES || draft.body.includes("\0");
-  const changed = !sameDraft(draft, acknowledgedRef.current);
+  const changed = !sameDraft(draft, acknowledgedDraft);
 
   const updateDraft = useCallback((next: Draft) => {
     draftRef.current = next;
@@ -85,8 +88,9 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     }));
     inFlightRef.current = false;
 
-    if (!result.ok && result.code === "CONFLICT") {
+    if (!result.ok && "latest" in result) {
       retryRequestRef.current = null;
+      setHasRetryRequest(false);
       conflictRef.current = true;
       setCollections(result.latest.collections);
       setTags(result.latest.tags);
@@ -94,23 +98,30 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
       return;
     }
     if (!result.ok) {
-      retryRequestRef.current = request;
+      const retryable = result.code === "DEPENDENCY_UNAVAILABLE";
+      retryRequestRef.current = retryable ? request : null;
+      setHasRetryRequest(retryable);
       setSaveState({ kind: "error", message: result.message });
       return;
     }
 
     retryRequestRef.current = null;
+    setHasRetryRequest(false);
     revisionRef.current = result.revision;
-    acknowledgedRef.current = { title: request.title, body: request.body, collectionId: request.collectionId, tagIds: request.tagIds };
+    const acknowledged = { title: request.title, body: request.body, collectionId: request.collectionId, tagIds: request.tagIds };
+    acknowledgedRef.current = acknowledged;
+    setAcknowledgedDraft(acknowledged);
     if (sameDraft(draftRef.current, acknowledgedRef.current)) {
       setSaveState({ kind: "saved" });
     } else {
       setSaveState({ kind: "dirty" });
       // Edits made during this request are saved only after its revision is
       // acknowledged, so the next request uses the new expected revision.
-      void pumpSave();
+      void pumpSaveRef.current();
     }
   }, [noteId]);
+
+  useEffect(() => { pumpSaveRef.current = pumpSave; }, [pumpSave]);
 
   useEffect(() => {
     if (conflictRef.current) return;
@@ -145,7 +156,9 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     conflictRef.current = false;
     retryRequestRef.current = null;
     revisionRef.current = latest.revision;
-    acknowledgedRef.current = canonicalDraft(next);
+    const acknowledged = canonicalDraft(next);
+    acknowledgedRef.current = acknowledged;
+    setAcknowledgedDraft(acknowledged);
     updateDraft(next);
     setSaveState({ kind: "saved" });
   }
@@ -180,8 +193,16 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     if (action === "delete") {
       if (noteRevision !== undefined) {
         revisionRef.current = noteRevision;
-        if (kind === "collection" && acknowledgedRef.current.collectionId === id) acknowledgedRef.current = { ...acknowledgedRef.current, collectionId: null };
-        if (kind === "tag" && acknowledgedRef.current.tagIds.includes(id)) acknowledgedRef.current = { ...acknowledgedRef.current, tagIds: acknowledgedRef.current.tagIds.filter((tagId) => tagId !== id) };
+        if (kind === "collection" && acknowledgedRef.current.collectionId === id) {
+          const acknowledged = { ...acknowledgedRef.current, collectionId: null };
+          acknowledgedRef.current = acknowledged;
+          setAcknowledgedDraft(acknowledged);
+        }
+        if (kind === "tag" && acknowledgedRef.current.tagIds.includes(id)) {
+          const acknowledged = { ...acknowledgedRef.current, tagIds: acknowledgedRef.current.tagIds.filter((tagId) => tagId !== id) };
+          acknowledgedRef.current = acknowledged;
+          setAcknowledgedDraft(acknowledged);
+        }
       }
       if (kind === "collection" && draftRef.current.collectionId === id) updateDraft({ ...draftRef.current, collectionId: null });
       if (kind === "tag" && draftRef.current.tagIds.includes(id)) updateDraft({ ...draftRef.current, tagIds: draftRef.current.tagIds.filter((tagId) => tagId !== id) });
@@ -213,7 +234,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     </div>
     <p className="note-editor-step-notice">Your note saves automatically after a short pause. Keep this tab open until the status says Saved.</p>
 
-    {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{retryRequestRef.current && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
+    {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{hasRetryRequest && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
     {saveState.kind === "conflict" && <section className="note-conflict-card" aria-labelledby="note-conflict-title">
       <div><h2 id="note-conflict-title">This note or its organization changed</h2><p>Your local text is preserved. The latest saved version is shown below.</p></div>
       {(draft.collectionId !== null && !saveState.latest.collections.some((item) => item.id === draft.collectionId) || draft.tagIds.some((id) => !saveState.latest.tags.some((item) => item.id === id))) && <p className="note-conflict-removed-org">A collection or tag selected in your draft was deleted elsewhere. Saving your version will remove that unavailable assignment.</p>}

@@ -1,8 +1,8 @@
 # BUILD-04 — Markdown notes and organization step plan
 
-Status: BUILD-04.4 implemented; validation pending; remaining step Proposed | Updated: 2026-11-15
+Status: BUILD-04.5 handoff recorded; local verification passed; manual feature acceptance pending | Updated: 2026-11-15
 
-This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 through BUILD-04.4 are implemented in source; runtime/acceptance testing remains pending.
+This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 through BUILD-04.4 are implemented in source. Local verification passed on 2026-11-15; signed-in database-backed feature acceptance remains pending.
 
 ## Scope
 
@@ -47,6 +47,8 @@ Global capacity settings remain blank and fail closed. Code may be implemented w
 **Deliverable:** Review the complete notes journey against the applicable first-workflow scenarios, record what was actually exercised, inspect the final diff and links, and update `PROJECT_STATUS.md` with completed steps, open decisions, and the next smallest milestone.
 
 **Acceptance:** No step is called complete based only on a successful build. Manual database evidence must identify the environment and include synthetic-fixture cleanup. Do not claim target-host, concurrent-tab, hostile-Markdown, global-cap, or accessibility acceptance unless those checks were actually performed. Do not commit, push, deploy, provision, or select provider capacities as part of this plan.
+
+**Handoff result — 2026-11-15:** `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules` (3 tests), `npm run test:connection-lifecycle` (6 tests), and `npm run build` passed. Signed-out HTTP smoke checks returned 200 for `/` and redirected `/notes` and `/notes/new` to sign-in. This confirms compilation, local rules/lifecycle checks, and the signed-out route boundary only. Signed-in note CRUD, editor autosave/conflicts, collection/tag CRUD and association revisions, hostile Markdown, responsive/keyboard behavior, and database quota/receipt behavior were not exercised. Required global mutation caps are unset, so live feature mutations remain fail-closed. Do not treat BUILD-04 as fully accepted until these flows are exercised in a configured development environment and fixture cleanup is confirmed.
 
 ## Decisions kept open
 

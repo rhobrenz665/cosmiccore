@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import { appUsers, collections, noteTags, notes, references, tags } from "./schema.ts";
-import { MAX_TAGS_PER_NOTE } from "@/lib/notes/rules";
+import { MAX_TAGS_PER_NOTE } from "../notes/rules.ts";
 import type { DbTransaction } from "./transaction-session.ts";
 
 export class DataAccessError extends Error {

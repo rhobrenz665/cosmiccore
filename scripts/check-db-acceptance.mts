@@ -62,8 +62,8 @@ function describeFailure(error: unknown) {
   const chain: string[] = [];
   let current: unknown = error;
   for (let depth = 0; depth < 5 && current != null; depth++) {
-    const value = current instanceof Error ? current : Object(current) as Record<string, unknown>;
-    const name = typeof value.name === "string" ? value.name : value.constructor?.name ?? typeof current;
+    const value = Object(current) as Record<string, unknown>;
+    const name = typeof value.name === "string" ? value.name : current instanceof Error ? current.constructor.name : typeof current;
     const code = typeof value.code === "string" || typeof value.code === "number" ? ` code=${value.code}` : "";
     const message = typeof value.message === "string" && value.message.length > 0 ? value.message : "<empty message>";
     chain.push(`${name}${code}: ${message}`.replace(/postgres(ql)?:\/\/[^\s]+/gi, "<REDACTED_DATABASE_URL>").slice(0, 400));
