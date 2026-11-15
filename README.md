@@ -4,7 +4,7 @@ CosmicCore is a private knowledge workspace for Markdown notes and learning. It 
 
 ## Current status
 
-BUILD-04 implementation is complete: private note creation, listing, reading and editing; Markdown preview; debounced autosave with revision-conflict choices; and collections and tags. Core signed-in local flows have been exercised. BUILD-04 acceptance is still partial: two-account isolation, live quota and retry edge cases, responsive and accessibility checks, and target-host behavior remain unverified. See [project status](PROJECT_STATUS.md) and the [BUILD-04 acceptance plan](docs/03-technical/build-04-step-plan.md).
+BUILD-04 MVP feature acceptance is complete: private note creation, listing, reading and editing; Markdown preview; debounced autosave with revision-conflict choices; and collections and tags. Core signed-in local flows, two-account isolation, quota rejection/recovery, shared database quota/retry races, responsive editor layouts, keyboard traversal, and accessibility-tree semantics have been exercised. Spoken screen-reader and target-host checks are deferred until after the rest of the MVP; this does not establish production launch readiness. See [project status](PROJECT_STATUS.md) and the [BUILD-04 acceptance plan](docs/03-technical/build-04-step-plan.md).
 
 Production capacity values and launch readiness have not been approved. The seven global mutation limits must be explicitly configured before database-backed mutations are enabled. The sample values in a developer's ignored `.env.local` are for local testing only; do not treat them as production limits or commit that file.
 

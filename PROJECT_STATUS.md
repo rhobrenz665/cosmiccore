@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-15 | Phase: BUILD-04 scope implemented; core local acceptance passed; remaining acceptance gates open
+Status: In progress | Updated: 2026-11-15 | Phase: BUILD-04 MVP feature acceptance complete; post-MVP checks deferred
 
-Latest checkpoint: BUILD-04 core signed-in local acceptance and current-state README recorded; residual acceptance and production decisions remain open, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04 MVP feature acceptance complete: core flows, two-account isolation, quota rejection/recovery, shared database race/retry checks, responsive layout, keyboard traversal, and accessibility-tree semantics passed locally. Spoken screen-reader and staging-host checks are deferred post-MVP by owner decision, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -372,11 +372,15 @@ Verification passed: `npm run typecheck`, `npm run lint`, `npm run test:mutation
 
 Owner approved temporary development-only mutation caps and requested production guidance. Configured the seven local values in ignored `.env.local`; these do not approve production capacities. Signed in to the local development app and verified blank-note creation, editing, autosave, persisted reload in a second tab, safe Markdown rendering of a hostile HTML fragment, stale-revision conflict presentation with the local draft preserved, and both explicit resolution choices. Created a collection and tag, assigned them to the note, then deleted both; the note remained and its associations were cleared. Removed the exact synthetic note in a transaction that decremented the matching account/global lifetime note counters. Receipt metadata and minute-rate counters were retained for normal expiry. The notes empty state and new-note page had stale “next step” copy; corrected both to describe the implemented editor.
 
-Not verified: two-account isolation, global-cap exhaustion/races, live per-account quota and retry receipt edge cases, mobile/responsive and keyboard/screen-reader acceptance, or target-host behavior. BUILD-04 is not declared publicly ready; these checks and the remaining operational gates stay open. The app's notes delete/trash workflow is outside BUILD-04 scope, so the synthetic fixture was cleaned up directly with a guarded transaction rather than left in the user's workspace. `.neon` remains untracked and untouched.
+Verified two-account isolation using separate Google identities in separate browser sessions: each account's notes list excluded the other's synthetic title/body, and direct note routes returned the generic unavailable response. Removed both exact synthetic notes and atomically reconciled account/global note counters. A local global note-count cap of zero rejected note creation without creating a row. At 320, 375, 768, and 1024 CSS pixels, the editor had no horizontal overflow; mobile Edit/Preview controls remained 44px high and the selected panel displayed. Keyboard traversal at 320px reached labeled title, Markdown and collection controls with visible focus. The DOM accessibility check confirmed names for editor controls, valid mobile `aria-controls` targets, and a polite save-status region. A spoken screen-reader session remains unverified. The app's notes delete/trash workflow is outside BUILD-04 scope; all synthetic notes have been removed with guarded transactions and accounting reconciled. `.neon` remains untracked and untouched.
 
 Local checks after the copy change passed: `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules` (3 passed), `npm run test:connection-lifecycle` (6 passed), and `npm run build`.
 
-Smallest next milestone: finish the remaining BUILD-04 acceptance for two-account isolation, live quota exhaustion/retry behavior, responsive and keyboard/screen-reader use, and target-host behavior. Keep production capacity values and operational gates Proposed until workload, provider budget, and owner decisions are recorded. No further feature step is planned after BUILD-04.5.
+Reran the local validation suite; typecheck, lint, both test suites, and production build passed. A quota/receipt database run `5063856e-5665-4ec7-a814-f416610c3993` failed before fixture setup committed. A scoped elevated read-only review found zero matching synthetic identities and zero reserved global rows; no cleanup was needed for that failed attempt.
+
+Shared database acceptance then passed as run `fb6f8f83-4711-4c9d-a003-f88c15d6fbf3`: concurrent account/global note-count and note-byte reservations, both account-block/write orderings, retry reconciliation after a discarded success response and after a rolled-back failure, and own-session disconnect rollback followed by a fresh retry. Synthetic fixture cleanup and final success were confirmed. In a separate authenticated local feature flow, zero global note-byte capacity caused the expected save error while retaining the full draft; restoring the exact prior local limit and editing the draft saved it. The exact synthetic note was removed and account/global note count and byte totals were reconciled atomically. Retry receipts and minute-rate rows remain for normal expiry.
+
+Smallest next milestone: owner selects the next prioritized MVP feature. BUILD-04 local MVP acceptance is complete. Spoken screen-reader and target-host checks are deferred until after the rest of the MVP; no staging deployment is configured. Keep production capacity values and other operational gates Proposed until workload, provider budget, and owner decisions are recorded.
 
 ## README status update — 2026-11-15
 
