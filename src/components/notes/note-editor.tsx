@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
-import { MAX_BODY_BYTES, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
+import { MAX_BODY_BYTES, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
 import { MarkdownPreview } from "./markdown-preview";
+import { OrganizationManager, type OrganizationOption } from "./organization-manager";
 
-type Draft = { title: string; body: string };
+type Draft = { title: string; body: string; collectionId: string | null; tagIds: string[] };
 type SaveRequest = Draft & { noteId: string; expectedRevision: number; mutationId: string };
-type ConflictVersion = Draft & { revision: number; updatedAt: string };
+type ConflictVersion = Draft & { revision: number; updatedAt: string; collections: OrganizationOption[]; tags: OrganizationOption[] };
 type SaveState =
   | { kind: "saved" }
   | { kind: "dirty" }
@@ -18,17 +19,20 @@ type SaveState =
   | { kind: "conflict"; latest: ConflictVersion };
 
 function canonicalDraft(draft: Draft): Draft {
-  return { title: draft.title.normalize("NFC").trim(), body: draft.body };
+  return { title: draft.title.normalize("NFC").trim(), body: draft.body, collectionId: draft.collectionId, tagIds: [...draft.tagIds].map((id) => id.toLowerCase()).sort() };
 }
 
 function sameDraft(left: Draft, right: Draft) {
   const a = canonicalDraft(left);
   const b = canonicalDraft(right);
-  return a.title === b.title && a.body === b.body;
+  return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number }) {
-  const [draft, setDraft] = useState<Draft>({ title: initialTitle, body: initialBody });
+export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
+  const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
+  const [draft, setDraft] = useState<Draft>(initialDraft);
+  const [collections, setCollections] = useState(initialCollections);
+  const [tags, setTags] = useState(initialTags);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [focusMode, setFocusMode] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "saved" });
@@ -84,6 +88,8 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
     if (!result.ok && result.code === "CONFLICT") {
       retryRequestRef.current = null;
       conflictRef.current = true;
+      setCollections(result.latest.collections);
+      setTags(result.latest.tags);
       setSaveState({ kind: "conflict", latest: result.latest });
       return;
     }
@@ -95,7 +101,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
 
     retryRequestRef.current = null;
     revisionRef.current = result.revision;
-    acknowledgedRef.current = { title: request.title, body: request.body };
+    acknowledgedRef.current = { title: request.title, body: request.body, collectionId: request.collectionId, tagIds: request.tagIds };
     if (sameDraft(draftRef.current, acknowledgedRef.current)) {
       setSaveState({ kind: "saved" });
     } else {
@@ -133,7 +139,9 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
     if (saveState.kind !== "conflict") return;
     if (changed && !window.confirm("Discard your local changes and use the latest saved version?")) return;
     const latest = saveState.latest;
-    const next = { title: latest.title, body: latest.body };
+    const next = { title: latest.title, body: latest.body, collectionId: latest.collectionId, tagIds: latest.tagIds };
+    setCollections(latest.collections);
+    setTags(latest.tags);
     conflictRef.current = false;
     retryRequestRef.current = null;
     revisionRef.current = latest.revision;
@@ -144,12 +152,51 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
 
   function saveMyVersion() {
     if (saveState.kind !== "conflict") return;
-    if (!window.confirm("Save your local text over the latest saved version? This replaces its title and body.")) return;
+    const orphanedCollection = draftRef.current.collectionId !== null && !saveState.latest.collections.some((item) => item.id === draftRef.current.collectionId);
+    const validTags = new Set(saveState.latest.tags.map((item) => item.id));
+    const orphanedTags = draftRef.current.tagIds.filter((id) => !validTags.has(id));
+    const hasRemovedAssignments = orphanedCollection || orphanedTags.length > 0;
+    const confirmation = `Save your local note over the latest saved version? This replaces its title and body.${hasRemovedAssignments ? " Organization items deleted elsewhere will be removed from your local selection." : ""}`;
+    if (!window.confirm(confirmation)) return;
+    if (hasRemovedAssignments) {
+      updateDraft({
+        ...draftRef.current,
+        collectionId: orphanedCollection ? null : draftRef.current.collectionId,
+        tagIds: draftRef.current.tagIds.filter((id) => validTags.has(id)),
+      });
+    }
     revisionRef.current = saveState.latest.revision;
     conflictRef.current = false;
     setSaveState({ kind: "dirty" });
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => { void pumpSave(); }, 0);
+  }
+
+  function onOrganizationChanged(kind: "collection" | "tag", action: "create" | "rename" | "delete", id: string, displayName?: string, noteRevision?: number) {
+    const setter = kind === "collection" ? setCollections : setTags;
+    setter((items) => action === "delete" ? items.filter((item) => item.id !== id) : [
+      ...items.filter((item) => item.id !== id), { id, displayName: displayName ?? "" },
+    ].sort((a, b) => a.displayName.localeCompare(b.displayName)));
+    if (action === "delete") {
+      if (noteRevision !== undefined) {
+        revisionRef.current = noteRevision;
+        if (kind === "collection" && acknowledgedRef.current.collectionId === id) acknowledgedRef.current = { ...acknowledgedRef.current, collectionId: null };
+        if (kind === "tag" && acknowledgedRef.current.tagIds.includes(id)) acknowledgedRef.current = { ...acknowledgedRef.current, tagIds: acknowledgedRef.current.tagIds.filter((tagId) => tagId !== id) };
+      }
+      if (kind === "collection" && draftRef.current.collectionId === id) updateDraft({ ...draftRef.current, collectionId: null });
+      if (kind === "tag" && draftRef.current.tagIds.includes(id)) updateDraft({ ...draftRef.current, tagIds: draftRef.current.tagIds.filter((tagId) => tagId !== id) });
+    }
+  }
+
+  function setCollection(collectionId: string | null) {
+    updateDraft({ ...draftRef.current, collectionId });
+  }
+
+  function toggleTag(tagId: string, checked: boolean) {
+    const selected = new Set(draftRef.current.tagIds);
+    if (checked) selected.add(tagId);
+    else selected.delete(tagId);
+    updateDraft({ ...draftRef.current, tagIds: [...selected].sort() });
   }
 
   function enterFocusMode() {
@@ -168,8 +215,9 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
 
     {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{retryRequestRef.current && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
     {saveState.kind === "conflict" && <section className="note-conflict-card" aria-labelledby="note-conflict-title">
-      <div><h2 id="note-conflict-title">This note changed in another tab</h2><p>Your local text is preserved. The latest saved version is shown below.</p></div>
-      <div className="note-conflict-preview"><strong>Latest saved version · revision {saveState.latest.revision}</strong><div className="note-conflict-title-preview">{saveState.latest.title || "Untitled"}</div><MarkdownPreview markdown={saveState.latest.body}/></div>
+      <div><h2 id="note-conflict-title">This note or its organization changed</h2><p>Your local text is preserved. The latest saved version is shown below.</p></div>
+      {(draft.collectionId !== null && !saveState.latest.collections.some((item) => item.id === draft.collectionId) || draft.tagIds.some((id) => !saveState.latest.tags.some((item) => item.id === id))) && <p className="note-conflict-removed-org">A collection or tag selected in your draft was deleted elsewhere. Saving your version will remove that unavailable assignment.</p>}
+      <div className="note-conflict-preview"><strong>Latest saved version · revision {saveState.latest.revision} · {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(saveState.latest.updatedAt))}</strong><div className="note-conflict-title-preview">{saveState.latest.title || "Untitled"}</div><p>Collection: {saveState.latest.collections.find((item) => item.id === saveState.latest.collectionId)?.displayName ?? "Unfiled"}</p><p>Tags: {saveState.latest.tagIds.map((id) => saveState.latest.tags.find((item) => item.id === id)?.displayName).filter(Boolean).join(", ") || "None"}</p><MarkdownPreview markdown={saveState.latest.body}/></div>
       <div className="note-conflict-actions"><Button variant="outline" onClick={useServerVersion}>Use server version</Button><Button onClick={saveMyVersion}>Save my version over it</Button></div>
     </section>}
 
@@ -189,6 +237,17 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision 
         <textarea id="note-body" className="note-body-input" value={draft.body} onChange={(event) => updateDraft({ ...draftRef.current, body: event.target.value })} aria-invalid={bodyError} aria-describedby={bodyError ? "note-body-help note-body-error" : "note-body-help"} placeholder={'# A new idea\n\nStart writing in Markdown…'} spellCheck autoCapitalize="sentences"/>
         <div id="note-body-help" className="note-field-meta"><span>Markdown source</span><span>{bodyBytes.toLocaleString()} / {MAX_BODY_BYTES.toLocaleString()} bytes</span></div>
         {bodyError && <p id="note-body-error" className="note-field-error" role="alert">The note exceeds the 256 KiB limit or contains a character the database cannot store.</p>}
+
+        <div className="note-organization-controls">
+          <label className="note-title-label" htmlFor="note-collection">Collection</label>
+          <select id="note-collection" value={draft.collectionId ?? ""} onChange={(event) => setCollection(event.target.value || null)}>
+            <option value="">Unfiled</option>{collections.map((item) => <option key={item.id} value={item.id}>{item.displayName}</option>)}
+          </select>
+          <fieldset className="note-tag-fieldset"><legend>Tags <span>{draft.tagIds.length}/20</span></legend>
+            {tags.length ? <div className="note-tag-options">{tags.map((item) => <label key={item.id}><input type="checkbox" checked={draft.tagIds.includes(item.id)} disabled={!draft.tagIds.includes(item.id) && draft.tagIds.length >= MAX_TAGS_PER_NOTE} onChange={(event) => toggleTag(item.id, event.target.checked)}/><span>{item.displayName}</span></label>)}</div> : <p className="organization-empty">No tags yet. Add one below.</p>}
+          </fieldset>
+          <OrganizationManager noteId={noteId} collections={collections} tags={tags} onChanged={onOrganizationChanged}/>
+        </div>
       </section>
 
       {!focusMode && <section id="note-preview-panel" className={`note-preview-panel${activeTab === "preview" ? " is-active" : ""}`} aria-label="Markdown preview">

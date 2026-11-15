@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 
-import { appUsers, collections, notes, references, tags } from "./schema.ts";
+import { appUsers, collections, noteTags, notes, references, tags } from "./schema.ts";
+import { MAX_TAGS_PER_NOTE } from "@/lib/notes/rules";
 import type { DbTransaction } from "./transaction-session.ts";
 
 export class DataAccessError extends Error {
@@ -37,6 +38,20 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
         createdAt: notes.createdAt, updatedAt: notes.updatedAt,
       }).from(notes).where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt)))
         .orderBy(desc(notes.updatedAt), desc(notes.id)).limit(200);
+    },
+    async listCollections() {
+      return tx.select({ id: collections.id, displayName: collections.displayName })
+        .from(collections).where(eq(collections.ownerId, ownerId)).orderBy(collections.normalizedName).limit(50);
+    },
+    async listTags() {
+      return tx.select({ id: tags.id, displayName: tags.displayName })
+        .from(tags).where(eq(tags.ownerId, ownerId)).orderBy(tags.normalizedName).limit(100);
+    },
+    async getNoteTagIds(noteId: string) {
+      validateId(noteId);
+      const rows = await tx.select({ tagId: noteTags.tagId }).from(noteTags)
+        .where(and(eq(noteTags.ownerId, ownerId), eq(noteTags.noteId, noteId))).orderBy(noteTags.tagId);
+      return rows.map((row) => row.tagId);
     },
     async getNote(id: string) {
       validateId(id);
@@ -75,6 +90,13 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       if (!collection) throw new DataAccessError("NOT_FOUND");
       return collection;
     },
+    async lockCollectionForUpdate(id: string) {
+      validateId(id);
+      const [collection] = await tx.select({ id: collections.id, displayName: collections.displayName })
+        .from(collections).where(and(eq(collections.ownerId, ownerId), eq(collections.id, id))).for("update");
+      if (!collection) throw new DataAccessError("NOT_FOUND");
+      return collection;
+    },
     async getTag(id: string) {
       validateId(id);
       const [tag] = await tx.select({
@@ -83,9 +105,16 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       if (!tag) throw new DataAccessError("NOT_FOUND");
       return tag;
     },
+    async lockTagForUpdate(id: string) {
+      validateId(id);
+      const [tag] = await tx.select({ id: tags.id, displayName: tags.displayName })
+        .from(tags).where(and(eq(tags.ownerId, ownerId), eq(tags.id, id))).for("update");
+      if (!tag) throw new DataAccessError("NOT_FOUND");
+      return tag;
+    },
     async assertAssociations(collectionId: string | null, tagIds: readonly string[]) {
       if (collectionId !== null) validateId(collectionId);
-      if (!Array.isArray(tagIds) || tagIds.length > 20) throw new DataAccessError("VALIDATION");
+      if (!Array.isArray(tagIds) || tagIds.length > MAX_TAGS_PER_NOTE) throw new DataAccessError("VALIDATION");
       for (const id of tagIds) validateId(id);
       const normalizedIds = tagIds.map((id) => id.toLowerCase());
       if (new Set(normalizedIds).size !== normalizedIds.length) throw new DataAccessError("VALIDATION");

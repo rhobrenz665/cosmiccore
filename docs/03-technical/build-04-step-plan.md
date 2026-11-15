@@ -1,8 +1,8 @@
 # BUILD-04 — Markdown notes and organization step plan
 
-Status: BUILD-04.3 implemented; validation pending; remaining steps Proposed | Updated: 2026-11-15
+Status: BUILD-04.4 implemented; validation pending; remaining step Proposed | Updated: 2026-11-15
 
-This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 through BUILD-04.3 are implemented in source; runtime/acceptance testing remains pending.
+This plan breaks BUILD-04 into reviewable steps following the [approved scope](../01-product/mvp-scope.md), [first-workflow specification](../04-features/first-workflow/spec.md), and [service contracts](../04-features/first-workflow/contracts.md). Work proceeds one step at a time. After each step, report the behavior implemented, files changed, validation performed, and remaining decisions; wait for direction before starting the next step. BUILD-04.1 through BUILD-04.4 are implemented in source; runtime/acceptance testing remains pending.
 
 ## Scope
 
@@ -39,6 +39,8 @@ Global capacity settings remain blank and fail closed. Code may be implemented w
 **Deliverable:** Create/rename/delete flat collections and tags; select one collection and up to 20 tags per note; case-insensitive NFC name uniqueness; quotas and idempotent mutations; owner-scoped association checks. Deleting a collection unassigns notes; deleting a tag removes associations; both bump affected note revisions so stale editors cannot revive associations.
 
 **Acceptance:** Foreign-owner IDs fail generically; duplicate normalized names fail safely; collection/tag delete preserves notes and increments affected revisions once; stale save receives a conflict; repeated retry does not double-change counters; count/byte/rate boundaries reject atomically. Global-cap values remain unset until explicitly chosen.
+
+**Implementation note:** Note assignments participate in the same revision-controlled save as title/body. Collection and tag create/rename/delete use the existing private mutation receipt/quota transaction and database NFC/case-insensitive uniqueness. Deletion preserves notes, clears collection/tag associations, and increments affected note revisions in the same transaction. The manager retries uncertain requests with the same mutation ID. Source is implemented; acceptance has not been exercised.
 
 ### BUILD-04.5 — Feature acceptance handoff
 

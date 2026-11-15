@@ -1,8 +1,8 @@
 # Project status
 
-Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.3 implemented; validation pending
+Status: Draft | Updated: 2026-11-15 | Phase: BUILD-04.4 implemented; validation pending
 
-Latest checkpoint: BUILD-04.3 serialized note autosave and conflict handling implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-04.4 collections, tags, and note associations implemented; validation pending, 2026-11-15. See the latest entry below; initialization status is historical.
 
 ## Completed this session
 
@@ -349,3 +349,15 @@ Added an owner-scoped save service inside the existing private mutation transact
 No tests, typecheck, build, browser/runtime checks, or database checks were run in this step. This is implementation status, not acceptance evidence. See [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md). Global caps, physical receipt/rate cleanup, role separation, and target-host behavior remain unresolved operational gates.
 
 Smallest next milestone: pause for owner review; then proceed to BUILD-04.4 (collections and tags) only when directed. No commit or push performed.
+
+## BUILD-03 — follow-up acceptance attempt and recovery failure — 2026-11-15
+
+At the owner's request, reran `npm run db:check-acceptance`. Run `8eee10f2-b295-4f47-a6d2-3ad370ee5733` failed during fixture setup with an empty-message `ErrorEvent`; transaction connection cleanup also failed. The script reported no success or fixture-cleanup confirmation. Ran the documented scoped recovery command for this exact run ID; it also failed with a database transaction connection cleanup error and did not report successful cleanup. The run ID is preserved for investigation. No database reset, migration, privilege change, or further acceptance retry was performed. Do not claim this run's fixtures were absent or removed; investigate database connectivity and perform a scoped fixture review before another acceptance run.
+
+## BUILD-04 Step 4 — collections, tags, and note associations — 2026-11-15
+
+Owner said to continue and specified that each feature use a new branch. Verified prior branch `codex/build-04-3-autosave` at `784968c` and created `codex/build-04-4-collections-tags` before feature edits; `.neon` remains untouched and untracked. Added owner-scoped collection/tag listing and locking, note tag reads, inline management to create/rename/delete collections and tags, normalized-name limits/duplicate handling, collection selection and a 20-tag note limit. Organization mutations use the existing transactional quota/receipt coordinator. Note autosave now includes collection/tag assignments in its revision/fingerprint; the server validates owner-matched associations and updates note content and associations atomically. Deleting a collection unassigns notes and references; deleting a tag removes note/reference associations; affected notes receive one revision/timestamp bump in the same transaction. The current editor gets the revision from a direct delete when its note was affected; unrelated stale tabs will conflict. Conflict data includes the latest authorized organization choices, and “Save my version” explicitly removes locally selected organizations that were deleted elsewhere.
+
+No tests, typecheck, build, browser/runtime checks, or database checks were run for BUILD-04.4. This is implementation status, not acceptance evidence. `git diff --check` and relative documentation-link checks passed. Global limits remain unset; live mutations therefore remain fail-closed. BUILD-04.1 through BUILD-04.4 still require the planned acceptance handoff. See [BUILD-04 step plan](docs/03-technical/build-04-step-plan.md).
+
+Smallest next milestone: pause for owner review; then complete BUILD-04.5 acceptance handoff, including investigation and scoped recovery of run `8eee10f2-b295-4f47-a6d2-3ad370ee5733`. Do not claim the failed database run was cleaned up.
