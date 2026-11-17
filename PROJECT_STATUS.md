@@ -2,7 +2,7 @@
 
 Status: In progress | Updated: 2026-11-18 | Phase: BUILD-05 implementation and targeted acceptance complete; maintenance-trigger choice Proposed
 
-Latest checkpoint: BUILD-05.1 Trash/restore UI smoke verification and expanded synthetic BUILD-05 database acceptance passed. See the latest entry below and [BUILD-05 step plan](docs/03-technical/build-05-step-plan.md). Maintenance-trigger executor, cadence and alert threshold remain Proposed; no trigger is deployed.
+Latest checkpoint: BUILD-05 implementation and targeted acceptance passed; PR [#3](https://github.com/rhobrenz665/cosmiccore/pull/3) is open from `codex/build-05-2-purge`. See the latest entry below and [BUILD-05 step plan](docs/03-technical/build-05-step-plan.md). Maintenance-trigger executor, cadence and alert threshold remain Proposed; no trigger is deployed.
 
 ## Completed this session
 
@@ -439,4 +439,8 @@ Corrected the pending two-owner acceptance harness to check that the foreign act
 
 Safari smoke verification passed for create/save, canceling Trash confirmation, moving a note to Trash, and restoring it. Expanded synthetic acceptance run `ac74f344-2d54-4315-bb23-cf8fb2ad9a66` passed on the isolated Neon `cosmiccore_dev` branch. It covered bounded/idempotent purge, retention of recent Trash, quota release, two-owner privacy and foreign mutation denial, tied cursor pagination, invalid cursors, Trash receipt replay, stale revision denial, expired restore denial, restored content/collection, concurrent save/Trash serialization, and concurrent restore/purge. The harness uses production purge/ownership/mutation cores with synthetic lifecycle/save handlers; authenticated Server Action wrappers and all accessibility/error UI states remain unverified. `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules`, and `npm run build` passed. Final app tables are empty (`app_users`, notes and quota ledgers); three Neon Auth identities remain. No trigger, commit, push or PR was created.
 
-Smallest next milestone: prepare the BUILD-05 PR from `codex/build-05-2-purge`, retaining the maintenance-trigger choices as Proposed and outside the deployed scope.
+Smallest next milestone: review BUILD-05 PR #3; keep the maintenance-trigger choices Proposed and outside deployed scope.
+
+## BUILD-05 PR opened — 2026-11-18
+
+Committed the reviewed BUILD-05 changes as `54b8e70` with `Co-authored-by: Codex <codex@openai.com>`, pushed `codex/build-05-2-purge` to `origin`, and opened [PR #3](https://github.com/rhobrenz665/cosmiccore/pull/3) against `main`. The unrelated untracked `.neon` file remains unstaged and unchanged. No merge or deployment was performed.
