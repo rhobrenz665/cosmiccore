@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-15 | Phase: BUILD-04 MVP feature acceptance complete; post-MVP checks deferred
+Status: In progress | Updated: 2026-11-18 | Phase: BUILD-05 implementation and targeted acceptance complete; maintenance-trigger choice Proposed
 
-Latest checkpoint: BUILD-04 MVP feature acceptance complete: core flows, two-account isolation, quota rejection/recovery, shared database race/retry checks, responsive layout, keyboard traversal, and accessibility-tree semantics passed locally. Spoken screen-reader and staging-host checks are deferred post-MVP by owner decision, 2026-11-15. See the latest entry below; initialization status is historical.
+Latest checkpoint: BUILD-05.1 Trash/restore UI smoke verification and expanded synthetic BUILD-05 database acceptance passed. See the latest entry below and [BUILD-05 step plan](docs/03-technical/build-05-step-plan.md). Maintenance-trigger executor, cadence and alert threshold remain Proposed; no trigger is deployed.
 
 ## Completed this session
 
@@ -385,3 +385,58 @@ Smallest next milestone: owner selects the next prioritized MVP feature. BUILD-0
 ## README status update — 2026-11-15
 
 Replaced the initialization-era README with current product capabilities, BUILD-04 acceptance status, local setup guidance, validation commands, and links to project documents. It distinguishes local-only mutation caps from unresolved production limits and warns that target-host and remaining acceptance checks are still open.
+
+
+## BUILD-05.1 — logical Trash and restore — 2026-11-17
+
+Owner authorized starting BUILD-05, one feature at a time, with implementation using 6.1 Sol Medium and testing deferred until a model switch. Created branch `codex/build-05-1-trash-restore`. Added owner-scoped, revision-checked Trash/restore mutations using existing account locks, receipt/rate coordination and lifecycle columns. Trash timestamps use a database-derived UTC clock and a 168-hour deadline; restore checks the deadline in the update statement. Neither transition changes note storage/count usage. Existing active-note predicates block stale saves to trashed notes.
+
+Added a confirmed Move to Trash action for fully saved notes and a private Trash page with 50-item cursor pagination, empty/error/expired states and restore controls. Unknown mutation outcomes retain the same request ID for retry; editor fields lock during pending/uncertain deletion. Trash receipt replay acknowledges prior success without repeating deletion; restore replay rechecks active-note access.
+
+No tests, typecheck, lint, build, browser/runtime or database checks were run. Implementation is not acceptance evidence. See [BUILD-05 step plan](docs/03-technical/build-05-step-plan.md) for pending acceptance cases. No packages, migrations, services, commit or push created. Existing untracked `.neon` remains untouched.
+
+Smallest next milestone: switch to the owner's testing model and verify BUILD-05.1 before the next feature. Physical purge, atomic quota release, restore/purge race evidence and the bounded maintenance trigger remain pending under BUILD-05.2. Trigger/environment decisions remain Proposed; no production cleanup or recovery guarantee is claimed.
+
+
+## BUILD-05 connection failure resolved — 2026-11-17
+
+Owner authorized `.env.local` development-database testing and asked to fix the failed connection. A minimal read-only `SELECT 1` through the actual `runTransaction` transport reproduced the empty `ErrorEvent` in the restricted sandbox. The identical probe succeeded with approved network access (`require_escalated`). This establishes execution-environment networking as the cause of this failure; no driver, database credential, schema or service change was necessary.
+
+A scoped read-only review of failed acceptance run `c61e3446-40c1-4636-9c72-516cd39b00bf` found zero identities under its exact synthetic issuer and zero global accounting rows in its eight reserved windows (`2250-01-15T20:52:00Z` through `20:59:00Z`). Setup inserts these atomically; no committed fixtures remained and no cleanup mutation was needed. Earlier uncertain-cleanup reports for this exact run are superseded by this evidence.
+
+Neon MCP explicitly returned project-not-found for the project ID in `.neon`; that connector's project access remains unresolved, independently of the working local database connection. Secrets must never be printed while diagnosing connections. No credential reset, provisioning, commit or push occurred.
+
+BUILD-05.1 and the internal BUILD-05.2 purge primitive pass previously run typecheck, lint and production build. Review corrected purge's owner advisory lock to precede quota locks. This is static/review evidence only; Trash/restore/purge runtime acceptance has not run. A daily maintenance invocation and alert thresholds are recommendations, still Proposed, with no trigger deployed.
+
+Smallest next milestone: switch to the owner-selected Luna Low testing model and run targeted BUILD-05 lifecycle/purge acceptance with approved network access and exact synthetic fixture cleanup. The general acceptance script is not a substitute for BUILD-05-specific coverage. Use the current branch `codex/build-05-2-purge`; changes remain uncommitted and `.neon` remains untouched.
+
+
+## Isolated development database created — 2026-11-17
+
+Owner explicitly authorized creating a development database. Neon MCP organization discovery found the personal Free organization; created project `cosmiccore-dev` (`lingering-fire-94844546`), branch `development`, database `cosmiccore_dev`, Singapore region, PostgreSQL 18, fixed 0.25 CU. This is an empty isolated project, not a clone of the inaccessible original project. No existing app environment or `.neon` setting was replaced. Application schema migrations, separate test-only credential configuration and targeted acceptance still remain before BUILD-05 testing. Preserve the original environment and never run the global purge acceptance against it.
+
+
+## Isolated acceptance environment prepared — 2026-11-17
+
+Applied the two existing Drizzle migrations to `cosmiccore_dev` in project `lingering-fire-94844546`, branch `br-steep-math-aznaz6tc`. The separate credential is stored in ignored `.env.acceptance.local` with mode 600; `.env.local` and `.neon` are unchanged. No managed auth is configured in the isolated project.
+
+Corrected the unexecuted purge acceptance harness: all three fixtures reserve 3 notes and 28 UTF-8 bytes; the remaining recent note uses 6 bytes. The harness loads only the isolated configuration, pins its endpoint/database/project, refuses a populated database, verifies accounting before cleanup and verifies synthetic owner/note/counter absence afterward. Extracted the existing purge algorithm into a shared internal core used by both production wrapper and harness, avoiding Next.js server-only imports in Node. No acceptance test was executed this turn. Next: switch to Luna Low and run `npm run db:check-build-05` with approved network access. This harness covers purge batches/idempotency and retained recent Trash; full lifecycle/isolation/deadline/race coverage remains outstanding.
+
+
+## BUILD-05 bounded purge acceptance — 2026-11-17
+
+Ran `npm run db:check-build-05` against the isolated Neon `cosmiccore_dev` database with approved network access. Run `82f3eb94-e5d0-48c0-a0d4-bdfb79ffdae6` passed: two expired notes were removed over batch sizes 1 then 10; the recent trashed note remained; repeat purge returned zero and no backlog. Synthetic owner, notes and account usage were removed; post-cleanup absence was verified. The harness pins the isolated database and refuses any preexisting users, notes or global usage rows.
+
+After adding the harness/core extraction, first typecheck found a stale generated `.next` route-types duplicate. Removing only generated `.next` output and rerunning resolved it. Typecheck, lint, production build and `git diff --check` then passed. BUILD-05.1 interactive lifecycle, expiry boundary, cross-account isolation, save/Trash race and concurrent restore/purge acceptance remain untested. Maintenance trigger recommendation is still Proposed and not deployed. No commits or pushes.
+
+## BUILD-05 sign-in and acceptance handoff — 2026-11-18
+
+The owner reported that sign-in appeared to work after the app began sending absolute, same-origin OAuth callback URLs. Typecheck passed for that change. The dev server was launched with the isolated acceptance database URL explicitly mapped to the app's runtime database variables. The browser result is owner-reported.
+
+Corrected the pending two-owner acceptance harness to check that the foreign active note is readable by its owner, hidden from the first owner, and survives purge. Adjusted fixture counters to match stored bytes. The expanded harness has not run and still requires an empty target. Next, verify interactive Trash and restore with disposable notes on the current dev database. Run the database-wide purge harness on a separate empty target or after confirming the isolated target is empty. The maintenance trigger remains Proposed.
+
+## BUILD-05 verification complete — 2026-11-18
+
+Safari smoke verification passed for create/save, canceling Trash confirmation, moving a note to Trash, and restoring it. Expanded synthetic acceptance run `ac74f344-2d54-4315-bb23-cf8fb2ad9a66` passed on the isolated Neon `cosmiccore_dev` branch. It covered bounded/idempotent purge, retention of recent Trash, quota release, two-owner privacy and foreign mutation denial, tied cursor pagination, invalid cursors, Trash receipt replay, stale revision denial, expired restore denial, restored content/collection, concurrent save/Trash serialization, and concurrent restore/purge. The harness uses production purge/ownership/mutation cores with synthetic lifecycle/save handlers; authenticated Server Action wrappers and all accessibility/error UI states remain unverified. `npm run typecheck`, `npm run lint`, `npm run test:mutation-rules`, and `npm run build` passed. Final app tables are empty (`app_users`, notes and quota ledgers); three Neon Auth identities remain. No trigger, commit, push or PR was created.
+
+Smallest next milestone: prepare the BUILD-05 PR from `codex/build-05-2-purge`, retaining the maintenance-trigger choices as Proposed and outside the deployed scope.
