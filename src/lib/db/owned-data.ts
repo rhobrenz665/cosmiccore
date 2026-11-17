@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, isNotNull, sql } from "drizzle-orm";
 
 import { appUsers, collections, noteTags, notes, references, tags } from "./schema.ts";
 import { MAX_TAGS_PER_NOTE } from "../notes/rules.ts";
@@ -38,6 +38,30 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
         createdAt: notes.createdAt, updatedAt: notes.updatedAt,
       }).from(notes).where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt)))
         .orderBy(desc(notes.updatedAt), desc(notes.id)).limit(200);
+    },
+    async listTrash(cursor?: { deletedAt: string; id: string }) {
+      if (cursor) {
+        validateId(cursor.id);
+        if (typeof cursor.deletedAt !== "string" || cursor.deletedAt.length > 64 || !Number.isFinite(Date.parse(cursor.deletedAt))) throw new DataAccessError("VALIDATION");
+      }
+      const rows = await tx.select({
+        id: notes.id, title: notes.title, revision: notes.revision,
+        deletedAt: notes.deletedAt, purgeAfter: notes.purgeAfter,
+        cursorTime: sql<string>`${notes.deletedAt}::text`,
+        expired: sql<boolean>`${notes.purgeAfter} <= clock_timestamp()`,
+      }).from(notes).where(and(eq(notes.ownerId, ownerId), isNotNull(notes.deletedAt),
+        cursor ? sql`(${notes.deletedAt}, ${notes.id}) < (${cursor.deletedAt}::timestamptz, ${cursor.id}::uuid)` : undefined))
+        .orderBy(desc(notes.deletedAt), desc(notes.id)).limit(51);
+      const items = rows.slice(0, 50);
+      const last = items.at(-1);
+      return { items, nextCursor: rows.length > 50 && last ? { deletedAt: last.cursorTime, id: last.id } : null };
+    },
+    async lockNoteLifecycle(id: string) {
+      validateId(id);
+      const [note] = await tx.select({ id: notes.id, revision: notes.revision, deletedAt: notes.deletedAt, purgeAfter: notes.purgeAfter })
+        .from(notes).where(and(eq(notes.ownerId, ownerId), eq(notes.id, id))).for("update");
+      if (!note) throw new DataAccessError("NOT_FOUND");
+      return note;
     },
     async listCollections() {
       return tx.select({ id: collections.id, displayName: collections.displayName })

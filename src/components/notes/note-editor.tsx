@@ -5,6 +5,7 @@ import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
 import { MAX_BODY_BYTES, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
+import { NoteLifecycleButton } from "./note-lifecycle-button";
 import { MarkdownPreview } from "./markdown-preview";
 import { OrganizationManager, type OrganizationOption } from "./organization-manager";
 
@@ -38,6 +39,8 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [focusMode, setFocusMode] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "saved" });
+  const [lifecycleLocked, setLifecycleLocked] = useState(false);
+  const lifecycleLockedRef = useRef(false);
   const draftRef = useRef(draft);
   const acknowledgedRef = useRef<Draft>(canonicalDraft(draft));
   const revisionRef = useRef(initialRevision);
@@ -60,7 +63,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   }, []);
 
   const pumpSave = useCallback(async () => {
-    if (inFlightRef.current || conflictRef.current) return;
+    if (inFlightRef.current || conflictRef.current || lifecycleLockedRef.current) return;
     const raw = draftRef.current;
     let request = retryRequestRef.current;
     if (!request) {
@@ -232,6 +235,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
       <div className={`note-editor-status note-save-${saveState.kind}`} role="status" aria-live="polite">{statusText}</div>
       {focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}
     </div>
+    <NoteLifecycleButton noteId={noteId} action="trash" getRevision={() => revisionRef.current} disabled={saveState.kind !== "saved" || changed || hasRetryRequest} onLockedChange={(locked) => { lifecycleLockedRef.current = locked; setLifecycleLocked(locked); }}/>
     <p className="note-editor-step-notice">Your note saves automatically after a short pause. Keep this tab open until the status says Saved.</p>
 
     {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{hasRetryRequest && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
@@ -247,6 +251,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
       <button type="button" aria-pressed={activeTab === "preview"} aria-controls="note-preview-panel" onClick={() => setActiveTab("preview")}><Eye size={15}/> Preview</button>
     </div>
 
+    <fieldset disabled={lifecycleLocked} className="note-lifecycle-fields">
     <div className="note-editor-grid">
       <section id="note-edit-panel" className={`note-edit-panel${activeTab === "edit" ? " is-active" : ""}`} aria-label="Edit note">
         <label className="note-title-label" htmlFor="note-title">Title</label>
@@ -276,6 +281,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
         <div className="note-preview-content"><MarkdownPreview markdown={draft.body}/></div>
       </section>}
     </div>
+    </fieldset>
   </div>;
 }
 

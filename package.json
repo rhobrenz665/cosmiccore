@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "db:check-acceptance": "node --experimental-strip-types scripts/check-db-acceptance.mts",
     "test:connection-lifecycle": "node --experimental-strip-types --test scripts/connection-lifecycle.test.mts",
-    "db:cleanup-acceptance": "node --experimental-strip-types scripts/cleanup-db-acceptance.mts"
+    "db:cleanup-acceptance": "node --experimental-strip-types scripts/cleanup-db-acceptance.mts",
+    "db:check-build-05": "node --experimental-strip-types scripts/check-build-05.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

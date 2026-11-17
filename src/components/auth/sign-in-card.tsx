@@ -31,8 +31,8 @@ export function SignInCard() {
     try {
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL,
-        errorCallbackURL: "/auth/sign-in?error=oauth_error",
+        callbackURL: new URL(callbackURL, window.location.origin).href,
+        errorCallbackURL: new URL("/auth/sign-in?error=oauth_error", window.location.origin).href,
       });
 
       if (result.error) {

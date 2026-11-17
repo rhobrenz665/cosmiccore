@@ -1,7 +1,7 @@
 "use server";
 
 import { MutationError } from "@/lib/db/mutation-core";
-import { createNote, DuplicateOrganizationNameError, getNoteEditorData, NoteConflictError, NoteInputError, mutateOrganization, saveNote } from "@/lib/notes/service";
+import { changeNoteLifecycle, NoteLifecycleConflictError, createNote, DuplicateOrganizationNameError, getNoteEditorData, NoteConflictError, NoteInputError, mutateOrganization, saveNote } from "@/lib/notes/service";
 import { DataAccessError } from "@/lib/db/owned-data";
 import { MAX_TAGS_PER_NOTE } from "@/lib/notes/rules";
 
@@ -73,5 +73,23 @@ export async function mutateOrganizationAction(input: OrganizationInput): Promis
     if (error instanceof MutationError) return { ok: false, code: error.code, message: error.message };
     if (error instanceof Error && error.message.startsWith("Configure COSMICCORE_GLOBAL_")) return { ok: false, code: "DEPENDENCY_UNAVAILABLE", message: "Organization changes are temporarily unavailable." };
     return { ok: false, code: "DEPENDENCY_UNAVAILABLE", message: "Organization changes are temporarily unavailable." };
+  }
+}
+
+
+type LifecycleInput = { noteId: string; expectedRevision: number; mutationId: string; action: "trash" | "restore" };
+export async function changeNoteLifecycleAction(input: LifecycleInput): Promise<{ ok: true } | { ok: false; code: string; message: string }> {
+  try {
+    if (!input || typeof input !== "object" || typeof input.noteId !== "string" || typeof input.mutationId !== "string" || !["trash", "restore"].includes(input.action) || !Number.isSafeInteger(input.expectedRevision)) {
+      return { ok: false, code: "VALIDATION", message: "Check the note and try again." };
+    }
+    await changeNoteLifecycle(input);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof NoteLifecycleConflictError) return { ok: false, code: "CONFLICT", message: error.message };
+    if (error instanceof NoteInputError || (error instanceof DataAccessError && error.code === "VALIDATION")) return { ok: false, code: "VALIDATION", message: "Check the note and try again." };
+    if (error instanceof DataAccessError && error.code === "NOT_FOUND") return { ok: false, code: "NOT_FOUND", message: "This note is no longer available for that action. Reload to see its current state." };
+    if (error instanceof MutationError) return { ok: false, code: error.code, message: error.code === "EXPIRED" ? "The restore deadline or retry window has expired. Reload to see the current state." : error.message };
+    return { ok: false, code: "DEPENDENCY_UNAVAILABLE", message: "The change could not be confirmed. Retry to safely check whether it completed." };
   }
 }

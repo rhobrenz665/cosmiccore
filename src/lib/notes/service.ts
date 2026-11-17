@@ -4,6 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { withPrivateData } from "@/lib/db/private-data";
 import { withPrivateMutation } from "@/lib/db/private-mutation";
 import { collections, noteTags, notes, referenceTags, references, tags } from "@/lib/db/schema";
+import { MutationError } from "@/lib/db/mutation-core";
 import { DataAccessError } from "@/lib/db/owned-data";
 import { MAX_BODY_BYTES, MAX_ORGANIZATION_NAME_CODE_POINTS, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "./rules";
 
@@ -209,5 +210,44 @@ export async function createNote(mutationId: string) {
       },
     }),
     authorizeReplay: async (data, result) => { await data.getNote(result.entityId); },
+  });
+}
+
+export const listTrash = (cursor?: { deletedAt: string; id: string }) => withPrivateData((data) => data.listTrash(cursor));
+
+export class NoteLifecycleConflictError extends Error {
+  constructor() { super("The note changed. Reload before trying again."); this.name = "NoteLifecycleConflictError"; }
+}
+
+export async function changeNoteLifecycle(input: { noteId: string; expectedRevision: number; mutationId: string; action: "trash" | "restore" }) {
+  if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 1 || !["trash", "restore"].includes(input.action)) throw new NoteInputError();
+  return withPrivateMutation({ operation: input.action === "trash" ? "trash_note" : "restore_note", mutationId: input.mutationId,
+    payload: { noteId: input.noteId, expectedRevision: input.expectedRevision },
+  }, {
+    prepare: async (tx, ownerId, data) => {
+      const current = await data.lockNoteLifecycle(input.noteId);
+      if (input.action === "trash" && current.deletedAt !== null) throw new DataAccessError("NOT_FOUND");
+      if (input.action === "restore" && current.deletedAt === null) throw new DataAccessError("NOT_FOUND");
+      if (current.revision !== input.expectedRevision) throw new NoteLifecycleConflictError();
+      return {
+        // Trash retains storage; restoring never reserves a second note.
+        changes: {},
+        apply: async () => {
+          const clock = await tx.execute<{ now: string }>(sql`select clock_timestamp()::text as now`);
+          const now = new Date(clock.rows[0].now);
+          const deletedAt = input.action === "trash" ? now : null;
+          const purgeAfter = deletedAt ? new Date(deletedAt.getTime() + 168 * 3600_000) : null;
+          const [changed] = await tx.update(notes).set({ deletedAt, purgeAfter, revision: sql`${notes.revision} + 1`, updatedAt: now })
+            .where(and(eq(notes.ownerId, ownerId), eq(notes.id, current.id), eq(notes.revision, input.expectedRevision),
+              input.action === "restore" ? sql`${notes.purgeAfter} > clock_timestamp()` : sql`${notes.deletedAt} is null`))
+            .returning({ entityId: notes.id, revision: notes.revision, deletedAt: notes.deletedAt, purgeAfter: notes.purgeAfter, resultUpdatedAt: notes.updatedAt });
+          if (!changed) throw new MutationError("EXPIRED");
+          return changed;
+        },
+      };
+    },
+    // Trash receipts contain metadata only and remain valid after purge or
+    // restore. Replaying a restore still requires an active authorized note.
+    authorizeReplay: async (data, result) => { if (input.action === "restore") await data.getNote(result.entityId); },
   });
 }
