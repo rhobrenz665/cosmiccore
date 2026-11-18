@@ -444,3 +444,9 @@ Smallest next milestone: review BUILD-05 PR #3; keep the maintenance-trigger cho
 ## BUILD-05 PR opened — 2026-11-18
 
 Committed the reviewed BUILD-05 changes as `54b8e70` with `Co-authored-by: Codex <codex@openai.com>`, pushed `codex/build-05-2-purge` to `origin`, and opened [PR #3](https://github.com/rhobrenz665/cosmiccore/pull/3) against `main`. The unrelated untracked `.neon` file remains unstaged and unchanged. No merge or deployment was performed.
+
+## Interactive Visual Lab future design — 2026-11-18
+
+Recorded the approved viewer-first design direction in the [future feature proposal](docs/04-features/interactive-visual-lab/spec.md) and linked it from both backlogs and the design system. The proposal covers local playback, prediction, accessible mobile and desktop layouts, private authoring and later bounded AI assistance. Example selection, performance limits, renderer dependencies, deletion/history and source-derived retention remain Proposed.
+
+Smallest next milestone remains BUILD-06.1 reference contract review. Visual Lab is outside MVP and follows the already prioritized mock-interview milestone. Implementation has not started.
