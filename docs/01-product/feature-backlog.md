@@ -12,6 +12,7 @@ Status: Proposed | Ordered by dependency, not a delivery estimate
 | P5 Release | Responsive QA, note/account cleanup, operational checks | Release checklist complete |
 | Next | Text mock interviews | Separate approved specification and AI budget |
 | Future | MCP, sharing, offline/native, voice, graphs, analytics, Telegram | Evidence of need and separate architecture review |
+| Future — Proposed / Not Started | [Interactive Visual Lab](../04-features/interactive-visual-lab/spec.md): subject-independent interactive 2D explanations, creator tools and later AI generation | Separate scope/architecture approval; validated schema, safe rendering, accessibility, ownership and budget gates; no change to MVP or build order |
 
 Every implementation milestone requires explicit authorization after its specification is reviewable. Dependencies do not authorize work automatically.
 
