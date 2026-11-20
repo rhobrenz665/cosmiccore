@@ -25,3 +25,7 @@ Use a shadcn/ui Button and decorative Lucide icon with a dynamic accessible acti
 ## Approved first-visit defaults — 2026-11-10
 
 Start in Cosmic appearance with System light/dark preference. The header light/dark button can set an explicit color preference; Appearance settings can return to System or select Minimal. This resolves the initial visual-style choice.
+
+## Future learning surfaces
+
+The [Interactive Visual Lab proposal](../04-features/interactive-visual-lab/spec.md) applies these tokens to a responsive lesson scene, synchronized captions and keyboard-operable playback. Its proposed mobile, reduced-motion and cross-theme checks apply when that future feature is prioritized.

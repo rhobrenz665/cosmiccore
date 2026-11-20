@@ -445,50 +445,8 @@ Smallest next milestone: review BUILD-05 PR #3; keep the maintenance-trigger cho
 
 Committed the reviewed BUILD-05 changes as `54b8e70` with `Co-authored-by: Codex <codex@openai.com>`, pushed `codex/build-05-2-purge` to `origin`, and opened [PR #3](https://github.com/rhobrenz665/cosmiccore/pull/3) against `main`. The unrelated untracked `.neon` file remains unstaged and unchanged. No merge or deployment was performed.
 
-## BUILD-06 planning draft — 2026-11-18
+## Interactive Visual Lab future design — 2026-11-18
 
-Read the reference specification, MVP scope, API/database contracts, design system, BUILD-04/05 plans, architecture decisions/open questions, deployment cost notes, and current Git state. Confirmed the reference deletion policy is approved already (immediate removal after confirmation, no Trash; linked notes survive); do not treat that decision as unresolved. Added a feature-by-feature BUILD-06 plan for contracts/URL validation, capture/list/detail, edit/organization, explicit note links, search/filtering, permanent deletion, and evidence-based close-out. Preserved proposed validation and capacity limits as open owner decisions; added explicit privacy, transaction, no-fetch, accessibility, acceptance, and out-of-scope requirements.
+Recorded the approved viewer-first design direction in the [future feature proposal](docs/04-features/interactive-visual-lab/spec.md) and linked it from both backlogs and the design system. The proposal covers local playback, prediction, accessible mobile and desktop layouts, private authoring and later bounded AI assistance. Example selection, performance limits, renderer dependencies, deletion/history and source-derived retention remain Proposed.
 
-Current checkout is `main` at the BUILD-05 merge; the only worktree item is pre-existing untracked `.neon`, left untouched. No implementation, tests, package changes, migrations, database operations, provisioning, commit, or push were performed.
-
-Smallest next milestone: review BUILD-06.1's proposed validation bounds, duplicate URL normalization, search fields, and note-link revision/schema details. Then request explicit implementation authorization before changing application code, following the documentation-first repository instruction.
-
-## BUILD-06.1 contract review — 2026-11-18
-
-Reviewed [validation and quota defaults, URL and search rules, and schema/service contracts](docs/03-technical/build-06-step-plan.md#build-061-contract-review). The checked-in reference schema and migration already cover the proposed tables, ownership constraints, URL uniqueness and byte accounting. The proposed service changes include revision updates on organization detachment and separately managed note links. No application code, database state or packages changed. Runtime checks remain pending.
-
-Smallest next milestone: confirm the proposed contract and test environment. After implementation authorization, start with pure validation/normalization and the owner-scoped reference service interface.
-
-## BUILD-06.1 implementation started — 2026-11-18
-
-Owner authorized implementation. Added pure validation, URL canonicalization, and private create/detail services using the existing association checks, quota accounting, and mutation receipts. The feature branch starts from the BUILD-05 merge on `main`. The Visual Lab checkpoint remains in its separate PR.
-
-Typecheck and targeted lint passed. No runtime or database acceptance checks ran. No packages, migrations, commits, pushes, or database operations were needed. The existing untracked `.neon` remains untouched.
-
-Smallest next milestone: review the validation and service interface, then wire the BUILD-06.2 capture form and bounded private list/detail UI. The test environment and global limits remain open. Search, edits, organization detachment revisions, note links, and deletion remain scheduled for their planned steps.
-
-## BUILD-06.2 capture, list, and detail — 2026-11-18
-
-Implemented the responsive capture modal with owned collection and tag selection, draft retention, safe retry after an uncertain save, and duplicate links scoped to the active account. The private library shows 20 records per page and orders ties by ID. Its cursor resolves an owned anchor record using database timestamp precision. Detail renders saved metadata as text and offers an explicit, validated external link. Empty, loading, dependency-error and unavailable states have distinct paths.
-
-Typecheck, lint and diff checks passed. Authenticated persistence, cross-account isolation, replay, destination-request checks, browser focus, and mobile rendering await runtime acceptance in the selected environment. No migrations, packages, database operations, commits or pushes were needed.
-
-Smallest next milestone: run targeted BUILD-06.2 acceptance in the selected test environment, then proceed to BUILD-06.3 revision-aware editing and organization.
-
-## BUILD-06.2 local verification — 2026-11-20
-
-Typecheck, lint, production build, mutation rules (3 tests), and connection lifecycle (6 tests) passed. Direct checks of the compiled reference validator passed for canonical URL keys, disallowed schemes, credentials and control characters, input limits, and UTF-8 storage accounting. These checks exercise local logic only.
-
-Smallest next milestone: confirm the development database, Google sign-in setup, and temporary reference limits for BUILD-06.2 acceptance. Then verify authenticated capture and reload, two-account isolation, pagination and retry, destination request behavior, and responsive keyboard/focus behavior before BUILD-06.3 editing. No database operations or application source edits were made during this verification.
-
-## BUILD-06.2 signed-out smoke check — 2026-11-20
-
-The local production server returned 200 for the home page and 307 to sign-in for both the References library and a reference detail URL while signed out. The temporary loopback server was stopped. Updated the implementation backlog checkpoint to show the current sequence through release. Signed-in acceptance is still pending selection of the development database/auth pairing and temporary quotas described above.
-
-## BUILD-06.3–06.6 implemented and locally verified — 2026-11-20
-
-Owner authorized BUILD-06 implementation. Added revision-checked reference editing with preserved conflict drafts, organization detachment revision updates, paginated two-way note links, private lexical search and collection/tag filters with list/grid views, and confirmed permanent deletion. Writes reuse owner-scoped mutation receipts and quota transactions. Reference deletion releases its quota and cascades to tag and note associations; linked notes survive. Used the existing schema, a 20-row page size, the proposed lexical search, and browser-native deletion confirmation.
-
-Typecheck, lint, production build, mutation rules (3 tests), and connection lifecycle (6 tests) passed. The connection lifecycle timeout test failed once during a concurrent build and passed on the sequential rerun. The local production server redirected the References library, filtered search, reference detail with note picker, and note detail to sign-in when signed out. The temporary server was stopped.
-
-Smallest next milestone: run BUILD-06.7 in the confirmed development database/auth environment with temporary quotas and two test identities. Signed-in interaction, database race/accounting evidence, cleanup, browser accessibility, destination request checks, and performance remain unverified. Global launch values remain Proposed. No database operations, migrations, dependency changes, commits, pushes, or deployment were needed.
+Smallest next milestone remains BUILD-06.1 reference contract review. Visual Lab is outside MVP and follows the already prioritized mock-interview milestone. Implementation has not started.
