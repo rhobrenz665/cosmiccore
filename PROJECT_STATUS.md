@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-20 | Phase: BUILD-06.1–06.6 implemented locally
+Status: In progress | Updated: 2026-11-20 | Phase: BUILD-07 implemented locally
 
-Latest checkpoint: BUILD-06 implementation is on `codex/build-06-1-references`. Signed-in acceptance and environment confirmation remain pending for BUILD-06.7. See the [BUILD-06 plan](docs/03-technical/build-06-step-plan.md).
+Latest checkpoint: BUILD-07 is implemented on `codex/build-07-knowledge-dashboard`, based on `origin/main` after the BUILD-06 merge. Signed-in acceptance for BUILD-06 and BUILD-07 remains open. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -450,3 +450,15 @@ Committed the reviewed BUILD-05 changes as `54b8e70` with `Co-authored-by: Codex
 Recorded the approved viewer-first design direction in the [future feature proposal](docs/04-features/interactive-visual-lab/spec.md) and linked it from both backlogs and the design system. The proposal covers local playback, prediction, accessible mobile and desktop layouts, private authoring and later bounded AI assistance. Example selection, performance limits, renderer dependencies, deletion/history and source-derived retention remain Proposed.
 
 Smallest next milestone remains BUILD-06.1 reference contract review. Visual Lab is outside MVP and follows the already prioritized mock-interview milestone. Implementation has not started.
+
+## BUILD-07 implementation and local verification — 2026-11-20
+
+Created `codex/build-07-knowledge-dashboard` from current `origin/main` after confirming the [BUILD-06 merge](https://github.com/rhobrenz665/cosmiccore/pull/5).
+
+Knowledge now browses and searches owned active notes and references together, with type, collection, all-selected-tag filters, list/grid views, and bounded keyset pagination. Relevance uses weighted PostgreSQL `simple` full-text search with length normalization. Results show escaped excerpts, organization, and internal detail links. An external reference link is available only for a validated saved address. List is the initial view.
+
+Dashboard now loads up to five active notes and five references independently using transaction savepoints. It reuses existing capture actions, links to the most recent available item, and distinguishes empty regions from failed queries. Chat displays its pending state and makes no provider requests. Markdown import remains BUILD-08.
+
+Typecheck, lint, all nine existing tests, and production build passed. The signed-out local server returned 307 to sign-in for Dashboard, Knowledge, and filtered Knowledge. The server was stopped. A read-only transaction on the pinned isolated development database ran the production mixed-search SQL against in-query synthetic rows. It verified complete pagination over 25 tied records with microsecond timestamps, relevance pagination, type/collection/two-tag matching, organization projection, exclusion of trashed and foreign records, and rejection of foreign or mismatched cursors. It wrote no fixtures.
+
+Smallest next milestone: complete signed-in BUILD-06 and BUILD-07 acceptance in the confirmed development environment, including mixed search through the normal UI, dashboard failure and capture behavior, two-account navigation, mobile and keyboard use, and performance with representative account sizes. No schema changes, provisioning, commits, pushes, or deployments were made for BUILD-07.

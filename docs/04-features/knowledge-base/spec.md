@@ -95,7 +95,7 @@ Cosmic/Minimal changes surfaces, not result structure or data. Keyboard order, r
 | KB-11 | Keyboard/mobile/zoom/all appearance modes | Reachable labeled controls and non-color type distinction |
 | KB-12 | No AI/provider/network service | Search functions without model calls or web crawling |
 
-Unit tests cover filter/query/cursor validation; PostgreSQL integration tests cover combined ordering, rank/tie-break and isolation; end-to-end tests cover query/navigation/errors. Ranking acceptance uses a small annotated mixed corpus; tune weights only with evidence. No code or tests have run.
+Unit tests cover filter/query/cursor validation; PostgreSQL integration tests cover combined ordering, rank/tie-break and isolation; end-to-end tests cover query/navigation/errors. Ranking acceptance uses a small annotated mixed corpus; tune weights only with evidence. BUILD-07 implements 20-row pages, the PostgreSQL `simple` configuration, and weighted length-normalized ranking. List is the default view across widths. Search uses a lightweight Markdown cleanup before deriving plain-text excerpts. See the [project status](../../../PROJECT_STATUS.md) for the read-only synthetic search check and remaining acceptance.
 
 ## Ready conditions
 
