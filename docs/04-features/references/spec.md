@@ -2,6 +2,8 @@
 
 Status: Proposed detailed specification | Updated: 2026-11-10
 
+The [BUILD-06.1 contract review](../../03-technical/build-06-step-plan.md#build-061-contract-review) records the proposed validation, search, and note-link decisions and maps them to the existing schema and mutation flow.
+
 ## Objective and stories
 
 Save useful web and GitHub links with personal context, organize them and retrieve them without depending on AI or web crawling. As a learner I want to save a URL with why it matters; find it by title, description or tags; edit outdated context; and remove a link I no longer need.
@@ -31,13 +33,13 @@ If URL schemes/private-host restrictions change later with crawling, specify SSR
 
 List default: updated_at descending, then id descending. Query searches title, description and saved URL text; collection and selected tags combine with AND. No network search. Empty query lists all own records. Default page 20, max 50; cursor binds to query/filters/view type. Show escaped plain-text snippets. Grid/list share filters and result ordering; mobile defaults to list as a proposal.
 
-Links between a note and reference are explicit owner-matched relationships. Add/remove link verifies both records; no automatic backlink scraping. Trashed notes cannot be newly linked; hide their links in active-note views. Reference deletion removes associations, not the linked note. Link editing bumps the source note revision if shown as note metadata; target-reference edits do not silently change stored note body.
+Links between a note and reference are explicit owner-matched relationships. Add/remove verifies both records; no automatic backlink scraping. Trashed notes cannot be newly linked and their links are hidden in both directions. Reference deletion removes associations without deleting the linked note. BUILD-06.1 proposes separately managed links that leave note and reference revisions unchanged. Editing the target reference leaves the stored note body intact.
 
 ## Deletion and failure states
 
 Approved reference policy (2026-11-10): confirmation followed by immediate permanent removal from the live reference library, with no reference Trash. Linked notes remain intact. Account-deletion cleanup also removes references under the approved account policy. Implementation details below remain Proposed.
 
-On commit, remove reference/tag/link rows and invalidate current source indexing; source-view resolution must fail immediately. Historical AI excerpts follow the separate chat-retention policy, not a promise of automatic redaction. Provider embeddings must not cause source deletion to roll back or allow stale retrieval.
+On commit, remove the reference, its tag associations and its note links. Source-view resolution must fail immediately. BUILD-06 has no source indexing rows. A later indexing build must exclude deleted sources immediately. Historical AI excerpts follow the separate chat-retention policy.
 
 Empty library offers Add Reference; no-results offers Clear filters; list failure shows Retry rather than pretending the library is empty. Invalid URL shows field error; duplicates offer existing item; quotas show actionable limit message. Missing/cross-owner ID returns generic NOT_FOUND. A reference deleted while editing cannot be recreated by a stale update. Repeated delete with an idempotency key is safe after owner authorization, without exposing other users' receipts.
 
@@ -47,7 +49,7 @@ Saved reference: UUID, owner_id, normalized saved URL, canonical key, title, des
 
 Server Actions: createReference({mutationId,url,title,description,collectionId,tagIds}) → {referenceId,revision,updatedAt}; updateReference adds referenceId/expectedRevision; deleteReference adds referenceId/expectedRevision/mutationId and returns removed ID. Server reads: getReference and searchReferences with validated filters/cursor. Use the [shared result envelope](../first-workflow/contracts.md), extending codes with DUPLICATE_REFERENCE and owner-only existingReferenceId. URL text or descriptions must not appear in logs. Deletion policy is Approved; the service implementation contract remains Proposed.
 
-Write note/reference content changes and source indexing invalidation in one database transaction; embedding generation is outside the transaction and outside this feature's availability requirements. Update only expected revisions, enforce unique URL key in the database, map unique violations to duplicate outcomes and roll back quota reservations on failure. Cross-owner and nonexistent tag/collection IDs must not reveal the foreign record.
+Write reference content, association changes, revisions, quota deltas and mutation receipts in one database transaction. Update only expected revisions, enforce the unique URL key in the database, map its unique violations to duplicate outcomes and roll back quota reservations on failure. Cross-owner and nonexistent tag/collection IDs receive the same generic response. When source indexing is introduced, its invalidation must commit with source changes.
 
 ## Nonfunctional requirements and dependencies
 
@@ -71,4 +73,4 @@ Dependencies: auth/internal user mapping, organization services, relational cons
 | REF-10 | Confirmed immediate reference deletion | Cleanup removes source access and links; stale update fails |
 | REF-11 | Mobile/keyboard/zoom and dialog errors | Reachable controls, proper focus and retained user input |
 
-Unit tests cover normalization and limits, database tests cover uniqueness/ownership/revisions/transactions, and end-to-end tests cover capture/search/edit and confirmed immediate deletion. No implementation tests have run.
+Unit tests cover normalization and limits, database tests cover uniqueness/ownership/revisions/transactions, and end-to-end tests cover capture/search/edit and confirmed immediate deletion. See the [BUILD-06 verification checkpoint](../../../PROJECT_STATUS.md) for completed local checks and pending signed-in acceptance.

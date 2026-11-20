@@ -40,6 +40,8 @@ The [integration validation](auth-integration-validation.md) proposes Neon Pool/
 
 ## Reference identity and Dashboard reads
 
+The [BUILD-06.1 contract review](build-06-step-plan.md#build-061-contract-review) maps the reference proposal to the checked-in schema and identifies the remaining service changes.
+
 Proposed reference additions: canonical_url_key with owner-scoped uniqueness, optimistic revision and indexed owner/update ordering. Canonicalization deliberately preserves query/path distinctions; see the [reference contract](../04-features/references/spec.md). Reference deletion is confirmed immediate after confirmation, without Trash; linked notes survive. Dashboard reads only bounded projected fields and optionally counts using the same indexes; no new summary/activity table. Note/reference relationship creation enforces owner matching.
 
 ## Detailed grounded-chat baseline

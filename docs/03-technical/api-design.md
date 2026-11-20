@@ -30,6 +30,8 @@ See [workflow detail](../04-features/first-workflow/spec.md) and [concrete contr
 
 ## References and Dashboard contracts
 
+See the [BUILD-06.1 contract review](build-06-step-plan.md#build-061-contract-review) for the proposed operation shapes, receipt handling and owner-scoped reads.
+
 [References](../04-features/references/spec.md) defines Proposed create/update/delete/search service inputs, revision checks and owner-only DUPLICATE_REFERENCE errors. Its immediate-removal-after-confirmation policy was approved on 2026-11-10. [Dashboard](../04-features/dashboard/spec.md) defines bounded getDashboard region results; no dashboard-specific public REST endpoint or analytics table is needed. All calls use the existing session/active-account context.
 
 ## Detailed grounded-chat baseline

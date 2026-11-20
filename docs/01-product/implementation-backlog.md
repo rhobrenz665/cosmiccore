@@ -96,6 +96,8 @@ Implement one bounded feature at a time; split the above tasks further when one 
 
 Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interviews, MCP execution, public sharing, offline/native clients, voice, knowledge graph/analytics, nesting, rich text, PDF/file extraction and arbitrary web crawling. A new feature request may revise scope, but no task here silently adds them.
 
-## Next recommended planning action
+## Current implementation checkpoint
 
-Complete PLAN-01 (Knowledge Base mixed search). Its accepted contract enables coherent reference/notes retrieval and Dashboard navigation. Then complete PLAN-02. Keep provider runtime testing for the later authorized chat implementation task; do not keep researching deferred operations instead of closing the current product contracts.
+BUILD-06.1–06.6 are implemented locally. BUILD-06.7 signed-in acceptance is next. Confirm the development database/auth pairing, two test identities and temporary quotas, then exercise REF-01–REF-11 and clean up fixtures. See the [reference step plan](../03-technical/build-06-step-plan.md) and [project status](../../PROJECT_STATUS.md).
+
+Continue with BUILD-07 through BUILD-11 and RELEASE-01 after References acceptance. Track the pending BUILD-05 maintenance trigger alongside release operations.

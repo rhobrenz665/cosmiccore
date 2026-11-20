@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, isNull, isNotNull, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { and, desc, eq, gt, inArray, isNull, isNotNull, sql } from "drizzle-orm";
 
-import { appUsers, collections, noteTags, notes, references, tags } from "./schema.ts";
+import { appUsers, collections, noteReferences, noteTags, notes, references, referenceTags, tags } from "./schema.ts";
 import { MAX_TAGS_PER_NOTE } from "../notes/rules.ts";
 import type { DbTransaction } from "./transaction-session.ts";
 
@@ -101,9 +102,77 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       const [reference] = await tx.select({
         id: references.id, url: references.url, title: references.title,
         description: references.description, collectionId: references.collectionId,
-        revision: references.revision, createdAt: references.createdAt, updatedAt: references.updatedAt,
+        storageBytes: references.storageBytes, revision: references.revision, createdAt: references.createdAt, updatedAt: references.updatedAt,
       }).from(references).where(and(eq(references.ownerId, ownerId), eq(references.id, id)));
       if (!reference) throw new DataAccessError("NOT_FOUND");
+      return reference;
+    },
+    async listReferences({ before, query, collectionId, tagIds, view }: {
+      before?: string; query: string; collectionId: string | null; tagIds: string[]; view: "grid" | "list";
+    }) {
+      const pageSize = 20;
+      const context = createHash("sha256").update(JSON.stringify([ownerId, query, collectionId, tagIds, view])).digest("hex");
+      const matches = and(
+        eq(references.ownerId, ownerId),
+        collectionId ? eq(references.collectionId, collectionId) : undefined,
+        query ? sql`to_tsvector('simple', ${references.title} || ' ' || ${references.description} || ' ' || ${references.url}) @@ plainto_tsquery('simple', ${query})` : undefined,
+        ...tagIds.map((tagId) => sql`exists (
+          select 1 from ${referenceTags}
+          where ${referenceTags.ownerId} = ${references.ownerId}
+            and ${referenceTags.referenceId} = ${references.id} and ${referenceTags.tagId} = ${tagId}
+        )`),
+      );
+      let cursor: { time: string; id: string } | undefined;
+      if (before !== undefined) {
+        if (before.length !== 101) throw new DataAccessError("VALIDATION");
+        const [id, cursorContext] = before.split(".");
+        validateId(id);
+        if (cursorContext !== context) throw new DataAccessError("VALIDATION");
+        [cursor] = await tx.select({ id: references.id, time: sql<string>`${references.updatedAt}::text` })
+          .from(references).where(and(matches, eq(references.id, id)));
+        if (!cursor) throw new DataAccessError("VALIDATION");
+      }
+      const rows = await tx.select({
+        id: references.id, url: references.url, title: references.title,
+        excerpt: sql<string>`left(${references.description}, 160)`,
+      }).from(references).where(and(matches,
+        cursor ? sql`(${references.updatedAt}, ${references.id}) < (${cursor.time}::timestamptz, ${cursor.id}::uuid)` : undefined))
+        .orderBy(desc(references.updatedAt), desc(references.id)).limit(pageSize + 1);
+      return { items: rows.slice(0, pageSize), nextCursor: rows.length > pageSize ? `${rows[pageSize - 1].id}.${context}` : null };
+    },
+    async listReferenceNotes(referenceId: string, picker: boolean, after?: string) {
+      validateId(referenceId);
+      if (after !== undefined) validateId(after);
+      const rows = await tx.select({
+        id: notes.id, title: notes.title, linked: sql<boolean>`${noteReferences.noteId} is not null`,
+      }).from(notes).leftJoin(noteReferences, and(eq(noteReferences.ownerId, ownerId),
+        eq(noteReferences.noteId, notes.id), eq(noteReferences.referenceId, referenceId)))
+        .where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt),
+          picker ? undefined : isNotNull(noteReferences.noteId), after ? gt(notes.id, after) : undefined))
+        .orderBy(notes.id).limit(21);
+      return { items: rows.slice(0, 20), next: rows.length > 20 ? rows[19].id : null };
+    },
+    async listNoteReferences(noteId: string, after?: string) {
+      validateId(noteId);
+      if (after !== undefined) validateId(after);
+      const rows = await tx.select({ id: references.id, title: references.title }).from(noteReferences)
+        .innerJoin(notes, and(eq(notes.ownerId, noteReferences.ownerId), eq(notes.id, noteReferences.noteId)))
+        .innerJoin(references, and(eq(references.ownerId, noteReferences.ownerId), eq(references.id, noteReferences.referenceId)))
+        .where(and(eq(noteReferences.ownerId, ownerId), eq(noteReferences.noteId, noteId),
+          isNull(notes.deletedAt), after ? gt(references.id, after) : undefined))
+        .orderBy(references.id).limit(21);
+      return { items: rows.slice(0, 20), next: rows.length > 20 ? rows[19].id : null };
+    },
+    async getReferenceTagIds(referenceId: string) {
+      validateId(referenceId);
+      const rows = await tx.select({ tagId: referenceTags.tagId }).from(referenceTags)
+        .where(and(eq(referenceTags.ownerId, ownerId), eq(referenceTags.referenceId, referenceId)))
+        .orderBy(referenceTags.tagId);
+      return rows.map((row) => row.tagId);
+    },
+    async findReferenceByUrlKey(canonicalUrlKey: string) {
+      const [reference] = await tx.select({ id: references.id }).from(references)
+        .where(and(eq(references.ownerId, ownerId), eq(references.canonicalUrlKey, canonicalUrlKey)));
       return reference;
     },
     async getCollection(id: string) {
@@ -136,9 +205,9 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       if (!tag) throw new DataAccessError("NOT_FOUND");
       return tag;
     },
-    async assertAssociations(collectionId: string | null, tagIds: readonly string[]) {
+    async assertAssociations(collectionId: string | null, tagIds: readonly string[], maxTags = MAX_TAGS_PER_NOTE) {
       if (collectionId !== null) validateId(collectionId);
-      if (!Array.isArray(tagIds) || tagIds.length > MAX_TAGS_PER_NOTE) throw new DataAccessError("VALIDATION");
+      if (!Array.isArray(tagIds) || tagIds.length > maxTags) throw new DataAccessError("VALIDATION");
       for (const id of tagIds) validateId(id);
       const normalizedIds = tagIds.map((id) => id.toLowerCase());
       if (new Set(normalizedIds).size !== normalizedIds.length) throw new DataAccessError("VALIDATION");
