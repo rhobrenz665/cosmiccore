@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-18 | Phase: BUILD-05 implementation and targeted acceptance complete; maintenance-trigger choice Proposed
+Status: In progress | Updated: 2026-11-20 | Phase: BUILD-06.1–06.6 implemented locally
 
-Latest checkpoint: BUILD-05 implementation and targeted acceptance passed; PR [#3](https://github.com/rhobrenz665/cosmiccore/pull/3) is open from `codex/build-05-2-purge`. See the latest entry below and [BUILD-05 step plan](docs/03-technical/build-05-step-plan.md). Maintenance-trigger executor, cadence and alert threshold remain Proposed; no trigger is deployed.
+Latest checkpoint: BUILD-06 implementation is on `codex/build-06-1-references`. Signed-in acceptance and environment confirmation remain pending for BUILD-06.7. See the [BUILD-06 plan](docs/03-technical/build-06-step-plan.md).
 
 ## Completed this session
 

@@ -96,7 +96,7 @@ Implement one bounded feature at a time; split the above tasks further when one 
 
 Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interviews, MCP execution, public sharing, offline/native clients, voice, knowledge graph/analytics, nesting, rich text, PDF/file extraction and arbitrary web crawling. A new feature request may revise scope, but no task here silently adds them.
 
-## Next recommended planning action
+## Current implementation checkpoint
 
 Complete PLAN-01 (Knowledge Base mixed search). Its accepted contract enables coherent reference/notes retrieval and Dashboard navigation. Then complete PLAN-02. Keep provider runtime testing for the later authorized chat implementation task; do not keep researching deferred operations instead of closing the current product contracts.
 

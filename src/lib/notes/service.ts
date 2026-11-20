@@ -10,11 +10,12 @@ import { MAX_BODY_BYTES, MAX_ORGANIZATION_NAME_CODE_POINTS, MAX_TAGS_PER_NOTE, M
 
 export const listNotes = () => withPrivateData((data) => data.listNotes());
 export const getNote = (id: string) => withPrivateData((data) => data.getNote(id));
-export const getNoteEditorData = (id: string) => withPrivateData(async (data) => ({
+export const getNoteEditorData = (id: string, referencePage?: { after?: string }) => withPrivateData(async (data) => ({
   note: await data.getNote(id),
   tagIds: await data.getNoteTagIds(id),
   collections: await data.listCollections(),
   tags: await data.listTags(),
+  linkedReferences: referencePage ? await data.listNoteReferences(id, referencePage.after) : undefined,
 }));
 
 export class NoteConflictError extends Error {
@@ -158,7 +159,6 @@ export async function mutateOrganization(input: { kind: OrganizationKind; action
           affectedNoteIds = (await tx.select({ noteId: noteTags.noteId }).from(noteTags)
             .where(and(eq(noteTags.ownerId, ownerId), eq(noteTags.tagId, resource.id)))).map((row) => row.noteId);
           await tx.delete(noteTags).where(and(eq(noteTags.ownerId, ownerId), eq(noteTags.tagId, resource.id)));
-          await tx.delete(referenceTags).where(and(eq(referenceTags.ownerId, ownerId), eq(referenceTags.tagId, resource.id)));
         }
         return {
           changes,
@@ -173,7 +173,16 @@ export async function mutateOrganization(input: { kind: OrganizationKind; action
               currentNote = updatedNotes.find((note) => note.id === input.noteId);
             }
             if (input.kind === "collection") {
-              await tx.update(references).set({ collectionId: null }).where(and(eq(references.ownerId, ownerId), eq(references.collectionId, resource.id)));
+              await tx.update(references).set({ collectionId: null, revision: sql`${references.revision} + 1`, updatedAt: sql`clock_timestamp()` }).where(and(eq(references.ownerId, ownerId), eq(references.collectionId, resource.id)));
+            }
+            if (input.kind === "tag") {
+              const detached = await tx.delete(referenceTags)
+                .where(and(eq(referenceTags.ownerId, ownerId), eq(referenceTags.tagId, resource.id)))
+                .returning({ id: referenceTags.referenceId });
+              if (detached.length) {
+                await tx.update(references).set({ revision: sql`${references.revision} + 1`, updatedAt: sql`clock_timestamp()` })
+                  .where(and(eq(references.ownerId, ownerId), inArray(references.id, detached.map(({ id }) => id))));
+              }
             }
             await tx.delete(table).where(and(eq(table.ownerId, ownerId), eq(table.id, resource.id)));
             return { entityId: resource.id, affectedCount: affectedNoteIds.length, revision: currentNote?.revision, resultUpdatedAt: currentNote?.updatedAt };
