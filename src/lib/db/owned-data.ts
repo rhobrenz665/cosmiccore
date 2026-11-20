@@ -3,6 +3,7 @@ import { and, desc, eq, gt, inArray, isNull, isNotNull, sql } from "drizzle-orm"
 
 import { appUsers, collections, noteReferences, noteTags, notes, references, referenceTags, tags } from "./schema.ts";
 import { MAX_TAGS_PER_NOTE } from "../notes/rules.ts";
+import { queryKnowledge } from "../knowledge/search-core.ts";
 import type { DbTransaction } from "./transaction-session.ts";
 
 export class DataAccessError extends Error {
@@ -32,7 +33,37 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
   // Hold this lock through the operation. Status updates/deletion must wait;
   // once a block commits, later operations see and reject the blocked status.
 
+  function listCollections(source = tx) {
+    return source.select({ id: collections.id, displayName: collections.displayName })
+      .from(collections).where(eq(collections.ownerId, ownerId)).orderBy(collections.normalizedName).limit(50);
+  }
+
+  function listTags(source = tx) {
+    return source.select({ id: tags.id, displayName: tags.displayName })
+      .from(tags).where(eq(tags.ownerId, ownerId)).orderBy(tags.normalizedName).limit(100);
+  }
+
   return {
+    searchKnowledge(filters: Parameters<typeof queryKnowledge>[2]) {
+      return queryKnowledge(tx, ownerId, filters);
+    },
+    recentNotes() {
+      return tx.transaction((region) => region.select({
+        id: notes.id, title: notes.title, updatedAt: notes.updatedAt,
+        updatedOrder: sql<string>`to_char(${notes.updatedAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+      }).from(notes).where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt)))
+        .orderBy(desc(notes.updatedAt), desc(notes.id)).limit(5));
+    },
+    recentReferences() {
+      return tx.transaction(async (region) => {
+        const items = await region.select({
+          id: references.id, title: references.title, updatedAt: references.updatedAt,
+          updatedOrder: sql<string>`to_char(${references.updatedAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+        }).from(references).where(eq(references.ownerId, ownerId))
+          .orderBy(desc(references.updatedAt), desc(references.id)).limit(5);
+        return { items, collections: await listCollections(region), tags: await listTags(region) };
+      });
+    },
     async listNotes() {
       return tx.select({
         id: notes.id, title: notes.title, body: notes.body, revision: notes.revision,
@@ -64,14 +95,8 @@ export async function openOwnedData(tx: DbTransaction, ownerId: string) {
       if (!note) throw new DataAccessError("NOT_FOUND");
       return note;
     },
-    async listCollections() {
-      return tx.select({ id: collections.id, displayName: collections.displayName })
-        .from(collections).where(eq(collections.ownerId, ownerId)).orderBy(collections.normalizedName).limit(50);
-    },
-    async listTags() {
-      return tx.select({ id: tags.id, displayName: tags.displayName })
-        .from(tags).where(eq(tags.ownerId, ownerId)).orderBy(tags.normalizedName).limit(100);
-    },
+    listCollections: () => listCollections(),
+    listTags: () => listTags(),
     async getNoteTagIds(noteId: string) {
       validateId(noteId);
       const rows = await tx.select({ tagId: noteTags.tagId }).from(noteTags)

@@ -98,16 +98,6 @@ Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interv
 
 ## Current implementation checkpoint
 
-Complete PLAN-01 (Knowledge Base mixed search). Its accepted contract enables coherent reference/notes retrieval and Dashboard navigation. Then complete PLAN-02. Keep provider runtime testing for the later authorized chat implementation task; do not keep researching deferred operations instead of closing the current product contracts.
+BUILD-06 merged in [PR #5](https://github.com/rhobrenz665/cosmiccore/pull/5). BUILD-07 adds the private mixed Knowledge search and Dashboard locally. The read-only synthetic PostgreSQL search verification passed. Complete signed-in acceptance for both features in the confirmed development environment, then continue with BUILD-08 Markdown transfer. Track the pending BUILD-05 maintenance trigger alongside release operations.
 
-## Future proposal — Interactive Visual Lab
-
-Status: Future / Proposed / Not Started
-
-[Interactive Visual Lab](../04-features/interactive-visual-lab/spec.md) proposes subject-independent animated explanations, an editable 2D canvas and later AI generation of validated visualization definitions.
-
-This feature is outside BUILD-01 through RELEASE-01. It does not change current MVP priorities, add dependencies to existing tasks or replace the next mock-interview milestone. Recommended consideration is after MVP and that milestone, subject to owner prioritization.
-
-Proposed future sequence: bounded 2D viewer → interactive editor and private persistence → AI-assisted generation/editing → separately evaluated advanced simulations, optional 3D and sharing. These phases have no approved delivery dates or implementation authorization.
-
-Knowledge graph/analytics remain separate deferred capabilities. Visual Lab does not imply automatic graph construction from the user's knowledge.
+See the [Reference step plan](../03-technical/build-06-step-plan.md), [Knowledge Base specification](../04-features/knowledge-base/spec.md), [Dashboard specification](../04-features/dashboard/spec.md), and [project status](../../PROJECT_STATUS.md).
