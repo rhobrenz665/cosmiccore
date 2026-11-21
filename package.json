@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:https": "next dev --webpack --experimental-https",
+    "dev:isolated": "node scripts/dev-isolated.mjs",
     "build": "next build --webpack",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

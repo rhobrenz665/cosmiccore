@@ -97,7 +97,7 @@ export function ReferenceCaptureForm({ collections, tags, first, reference }: {
         showCloseButton={false}
         initialFocus={urlInput}
         finalFocus={trigger}
-        className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-5 motion-reduce:transition-none sm:inset-x-auto sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-[min(36rem,calc(100vw-3rem))] sm:-translate-1/2 sm:rounded-2xl sm:border sm:p-6"
+        className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-5 motion-reduce:transition-none sm:top-1/2 sm:data-[side=bottom]:right-auto sm:data-[side=bottom]:bottom-auto sm:data-[side=bottom]:left-1/2 sm:w-[min(36rem,calc(100vw-3rem))] sm:-translate-1/2 sm:data-[side=bottom]:data-starting-style:-translate-y-1/2 sm:data-[side=bottom]:data-ending-style:-translate-y-1/2 sm:rounded-2xl sm:border sm:p-6"
       >
         <div>
           <SheetTitle className="text-xl">{reference ? "Edit reference" : "Add reference"}</SheetTitle>

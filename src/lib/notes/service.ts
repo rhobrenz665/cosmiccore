@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { withPrivateData } from "@/lib/db/private-data";
 import { withPrivateMutation } from "@/lib/db/private-mutation";
@@ -208,18 +210,40 @@ export async function mutateOrganization(input: { kind: OrganizationKind; action
 }
 
 export async function createNote(mutationId: string) {
-  return withPrivateMutation({ operation: "create_note", mutationId, payload: { title: "", body: "" } }, {
-    prepare: async (tx, ownerId) => ({
-      changes: { notes_count: 1, notes_bytes: 0 },
-      apply: async () => {
-        const [created] = await tx.insert(notes).values({ ownerId, title: "", body: "" }).returning({
-          id: notes.id, revision: notes.revision, updatedAt: notes.updatedAt,
-        });
-        return { entityId: created.id, revision: created.revision, resultUpdatedAt: created.updatedAt };
-      },
-    }),
+  return insertNote({ mutationId, title: "", body: "", collectionId: null, tagIds: [] }, false);
+}
+
+// The transfer handler decodes and validates the file before invoking this service.
+export async function importMarkdownNote(input: {
+  mutationId: string; title: string; body: string; collectionId: string | null; tagIds: string[];
+}) {
+  return insertNote(input, true);
+}
+
+function insertNote({ mutationId, title, body, collectionId, tagIds }: {
+  mutationId: string; title: string; body: string; collectionId: string | null; tagIds: string[];
+}, importing: boolean) {
+  const payload = importing
+    ? { title, bodyHash: createHash("sha256").update(body).digest("hex"), collectionId, tagIds }
+    : { title, body };
+  return withPrivateMutation({ operation: importing ? "import_markdown" : "create_note", mutationId, payload }, {
+    prepare: async (tx, ownerId, data) => {
+      if (importing) await data.assertAssociations(collectionId, tagIds);
+      return {
+        changes: { notes_count: 1, notes_bytes: Buffer.byteLength(title, "utf8") + Buffer.byteLength(body, "utf8") },
+        apply: async () => {
+          const [created] = await tx.insert(notes).values({ ownerId, title, body, collectionId }).returning({
+            id: notes.id, revision: notes.revision, updatedAt: notes.updatedAt,
+          });
+          if (tagIds.length) {
+            await tx.insert(noteTags).values(tagIds.map((tagId) => ({ ownerId, noteId: created.id, tagId })));
+          }
+          return { entityId: created.id, revision: created.revision, resultUpdatedAt: created.updatedAt };
+        },
+      };
+    },
     authorizeReplay: async (data, result) => { await data.getNote(result.entityId); },
-  });
+  }, importing ? "throw" : undefined);
 }
 
 export const listTrash = (cursor?: { deletedAt: string; id: string }) => withPrivateData((data) => data.listTrash(cursor));

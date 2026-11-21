@@ -107,6 +107,7 @@ export default async function KnowledgePage({ searchParams }: {
           <p>Create a Markdown note or save a link you want to revisit.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <CreateNoteButton label="New note" />
+            <Link className="secondary-link" href="/notes/import">Import Markdown</Link>
             <ReferenceCaptureForm first collections={results.collections} tags={results.tags} />
           </div>
         </>}

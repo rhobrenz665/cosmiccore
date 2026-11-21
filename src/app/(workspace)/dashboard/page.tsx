@@ -56,6 +56,7 @@ export default async function Dashboard() {
     </header>
     <div className="flex flex-wrap items-start gap-3" aria-label="Quick actions">
       <CreateNoteButton label="New note" />
+      <Link className="secondary-link" href="/notes/import">Import Markdown</Link>
       {references ? <ReferenceCaptureForm collections={references.collections} tags={references.tags} />
         : <Link className="secondary-link" href="/references">Open References</Link>}
       <Link className="secondary-link" href="/knowledge">Search Knowledge</Link>

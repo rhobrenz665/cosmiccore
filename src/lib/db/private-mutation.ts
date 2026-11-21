@@ -7,8 +7,8 @@ import { withDbTransaction } from "@/lib/db/transaction";
 
 // Trusted feature-service entry point, not a Server Action. Browser input must
 // never supply a handler, owner ID, usage delta, policy or clock override.
-export async function withPrivateMutation(request: MutationRequest, handler: MutationHandler) {
-  const user = await requireAppUser();
+export async function withPrivateMutation(request: MutationRequest, handler: MutationHandler, failure?: "throw") {
+  const user = await requireAppUser(failure);
   const policy = readQuotaPolicy(process.env);
   return withDbTransaction((tx) => executeMutation(tx, user.id, request, policy, handler));
 }
