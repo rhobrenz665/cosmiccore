@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-20 | Phase: BUILD-07 implemented locally
+Status: In progress | Updated: 2026-11-21 | Phase: BUILD-08 implemented locally
 
-Latest checkpoint: BUILD-07 is implemented on `codex/build-07-knowledge-dashboard`, based on `origin/main` after the BUILD-06 merge. Signed-in acceptance for BUILD-06 and BUILD-07 remains open. See the [implementation backlog](docs/01-product/implementation-backlog.md).
+Latest checkpoint: BUILD-08 is implemented on `codex/build-08-markdown-transfer`, based on `origin/main` after the BUILD-07 merge. The rate-limit migration is applied only to the isolated development database. The signed-in Safari round trip and synthetic two-account and concurrency checks passed. A second Google browser session and target-host performance remain unverified. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -462,3 +462,35 @@ Dashboard now loads up to five active notes and five references independently us
 Typecheck, lint, all nine existing tests, and production build passed. The signed-out local server returned 307 to sign-in for Dashboard, Knowledge, and filtered Knowledge. The server was stopped. A read-only transaction on the pinned isolated development database ran the production mixed-search SQL against in-query synthetic rows. It verified complete pagination over 25 tied records with microsecond timestamps, relevance pagination, type/collection/two-tag matching, organization projection, exclusion of trashed and foreign records, and rejection of foreign or mismatched cursors. It wrote no fixtures.
 
 Smallest next milestone: complete signed-in BUILD-06 and BUILD-07 acceptance in the confirmed development environment, including mixed search through the normal UI, dashboard failure and capture behavior, two-account navigation, mobile and keyboard use, and performance with representative account sizes. No schema changes, provisioning, commits, pushes, or deployments were made for BUILD-07.
+
+## BUILD-08 Markdown transfer implementation — 2026-11-21
+
+Created `codex/build-08-markdown-transfer` from `origin/main` after confirming the [BUILD-07 merge](https://github.com/rhobrenz665/cosmiccore/pull/6). Added a private single-file import with escaped UTF-8 preview, an idempotent quota-accounted write, individual last-saved Markdown export, and bounded active-note ZIP export from a single database statement snapshot. The ZIP uses uncompressed entries with sanitized title/UUID filenames and no new dependencies. Bulk export uses a configurable five-per-account default over a one-hour window. The generated rate-limit migration is [0002_note_export_usage.sql](drizzle/0002_note_export_usage.sql).
+
+Typecheck, lint, production build, and all nine existing tests passed. A timing-sensitive connection test passed on rerun. A duplicate generated Next.js route type was removed before the final successful typecheck. Direct transfer checks covered invalid UTF-8, binary controls, unsupported extension, oversized input, empty documents, BOM/Unicode/CRLF byte fidelity, stream cancellation, and standard ZIP extraction and checksums. The signed-out loopback smoke check passed for the import-page redirect, private JSON errors, same-origin and cross-origin handling, oversized chunked input, and bulk HEAD. The origin check now uses the browser-facing HTTP Host. The temporary server was stopped.
+
+Smallest next milestone: apply the reviewed migration to the confirmed development database and run signed-in round-trip, two-account and Trash isolation, mutation replay and quota, concurrent bulk rate-limit, and browser round-trip/download checks. Target-host origin handling, export deadlines, and memory/concurrency performance remain unverified. No database operations, package installation, commits, pushes, or deployments were performed.
+
+## Local sign-in diagnostic — 2026-11-21
+
+The running port 3000 server uses HTTP and the original `neondb` pairing from `.env.local`. Both that database and the separately pinned `cosmiccore_dev` database answered read-only probes. Neither has the BUILD-08 bulk export rate-limit migration. The Google sign-in initiation payload from `http://localhost:3000` reached Google's account selection. The equivalent `http://127.0.0.1:3000` call returned `INVALID_CALLBACKURL`. The Google account selection and return callback still need an interactive check. No configuration or database changes were made.
+
+## HTTPS sign-in and reference dialog follow-up
+
+The owner confirmed Google sign-in completes on the local HTTPS server. The server still uses the original `neondb` configuration. Updated the shared reference capture/edit form so its desktop positioning overrides the bottom sheet's side-specific styles, while retaining the mobile bottom sheet. Next, verify desktop centering and narrow-screen behavior in a signed-in browser. BUILD-08 still needs the rate-limit migration and transfer acceptance on the isolated development database.
+
+## BUILD-08 isolated development acceptance — 2026-11-21
+
+Applied the approved migration only to pinned `cosmiccore_dev` and verified its third migration and export rate-limit table. Restarted the HTTPS server with process-only database overrides for that target. Google auth uses the existing Neon Auth endpoint. Environment files were preserved.
+
+In signed-in Safari, verified the centered desktop Add reference dialog and its bottom sheet at 390 × 844. Imported a disposable Markdown file with a preview. Compared the source, isolated database bytes, individual Safari download and checked ZIP contents byte for byte. Fixed the browser download completion check to use an explicit export byte-count header independent of how the HTTP response is framed. Typecheck and lint passed. Moved the disposable note to recoverable Trash. The next ZIP was empty and its direct individual export returned NOT_FOUND.
+
+Remaining acceptance covers a second signed-in account, import retry replay, concurrent rate-limit enforcement, and target-host performance. The isolated HTTPS dev server is still running.
+
+## Isolated development launcher
+
+Added and started `npm run dev:isolated` as the repeatable HTTPS launch command for the pinned `cosmiccore_dev` branch. It reads the ignored acceptance configuration, sets both database URLs for the server process, and retains the existing Google sign-in pairing. Setup is documented in [README](README.md).
+
+## BUILD-08 handler acceptance with synthetic accounts
+
+Ran the actual import and export route handlers against pinned `cosmiccore_dev` with a test substitute at the Google identity boundary. Repeating an identical import with the same mutation ID returned the original note and kept one row. Reusing the ID with changed bytes returned 400. The other account received 404 for the individual export and an empty ZIP for its own bulk export. Four overlapping bulk requests at a test cap of two returned two successes and two 429s. Removed both synthetic accounts, their notes and counters, and reconciled their global quota deltas. The earlier Safari round trip covers real Google sign-in for one account. A second Google session and representative target-host performance remain unverified.

@@ -7,11 +7,18 @@ import { appUsers, type AppUser } from "@/lib/db/schema";
 import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/server";
 
-export async function requireAppUser(): Promise<AppUser> {
+export class PrivateAccountUnavailable extends Error {
+  constructor() {
+    super("Sign in to an active account to continue.");
+  }
+}
+
+export async function requireAppUser(failure: "redirect" | "throw" = "redirect"): Promise<AppUser> {
   const { data: session, error } = await auth.getSession();
   const user = session?.user;
 
   if (error || !user) {
+    if (failure === "throw") throw new PrivateAccountUnavailable();
     redirect("/auth/sign-in");
   }
 
@@ -41,13 +48,11 @@ export async function requireAppUser(): Promise<AppUser> {
     })
     .returning();
 
-  if (!appUser) {
+  if (!appUser || appUser.status !== "active") {
+    if (failure === "throw") throw new PrivateAccountUnavailable();
     redirect("/auth/sign-in?error=account_unavailable");
   }
 
-  if (appUser.status !== "active") {
-    redirect("/auth/sign-in?error=account_unavailable");
-  }
 
   return appUser;
 }

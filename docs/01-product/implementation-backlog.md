@@ -98,6 +98,6 @@ Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interv
 
 ## Current implementation checkpoint
 
-BUILD-06 merged in [PR #5](https://github.com/rhobrenz665/cosmiccore/pull/5). BUILD-07 adds the private mixed Knowledge search and Dashboard locally. The read-only synthetic PostgreSQL search verification passed. Complete signed-in acceptance for both features in the confirmed development environment, then continue with BUILD-08 Markdown transfer. Track the pending BUILD-05 maintenance trigger alongside release operations.
+BUILD-06 and BUILD-07 merged in [PR #5](https://github.com/rhobrenz665/cosmiccore/pull/5) and [PR #6](https://github.com/rhobrenz665/cosmiccore/pull/6). BUILD-08 is implemented locally. The export rate-limit migration is applied to the isolated development database and the Safari round trip passed. Finish the remaining transfer acceptance cases in project status. The remaining signed-in References and Knowledge/Dashboard checks are tracked in [project status](../../PROJECT_STATUS.md). Continue with BUILD-09 Settings and account deletion after transfer acceptance.
 
-See the [Reference step plan](../03-technical/build-06-step-plan.md), [Knowledge Base specification](../04-features/knowledge-base/spec.md), [Dashboard specification](../04-features/dashboard/spec.md), and [project status](../../PROJECT_STATUS.md).
+See the [first workflow transfer contract](../04-features/first-workflow/contracts.md#transfer-route-handlers). Track the pending BUILD-05 maintenance trigger alongside release operations.

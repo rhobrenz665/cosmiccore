@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ArrowLeft, FileText } from "lucide-react";
 import { ReferenceMutationButton } from "@/components/references/mutation-button";
+import { DownloadMarkdown } from "@/components/transfer/download-markdown";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { DataAccessError } from "@/lib/db/owned-data";
 import { getNoteEditorData } from "@/lib/notes/service";
@@ -27,6 +28,11 @@ export default async function NotePage({ params, searchParams }: {
   const { note, tagIds, collections, tags, linkedReferences } = editorData;
   return <div className="page-wrap"><div className="page-heading"><Link className="text-link" href="/notes"><ArrowLeft size={16}/> All notes</Link><span className="eyebrow"><FileText size={15}/> PRIVATE NOTE</span><h1>{note.title || "Untitled"}</h1><p>Last saved {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(note.updatedAt)}</p></div>
     <NoteEditor noteId={note.id} initialTitle={note.title} initialBody={note.body} initialRevision={note.revision} initialCollectionId={note.collectionId} initialTagIds={tagIds} collections={collections} tags={tags}/>
+    <section className="mt-6 space-y-2" aria-labelledby="note-export">
+      <h2 className="font-semibold" id="note-export">Export Markdown</h2>
+      <p className="text-sm text-muted-foreground">Downloads the last saved version. Wait for the editor to show Saved to include your latest changes.</p>
+      <DownloadMarkdown href={`/api/notes/${note.id}/export`} label="Download saved Markdown" />
+    </section>
     <section className="mt-6 space-y-3" aria-labelledby="note-references">
       <h2 className="font-semibold" id="note-references">Linked references</h2>
       {linkedReferences?.items.length ? (

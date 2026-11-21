@@ -182,3 +182,12 @@ export const mutationReceipts = pgTable("mutation_receipts", {
   check("mutation_receipts_count_check", sql`${t.affectedCount} >= 0`),
   check("mutation_receipts_expiry_check", sql`${t.expiresAt} = ${t.createdAt} + interval '24 hours'`),
 ]);
+
+// A single rolling-window counter per account, shared by all app instances.
+export const noteExportUsage = pgTable("note_export_usage", {
+  ownerId: uuid("owner_id").primaryKey().references(() => appUsers.id, { onDelete: "cascade" }),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+  used: integer("used").notNull(),
+}, (t) => [
+  check("note_export_usage_used_check", sql`${t.used} > 0`),
+]);

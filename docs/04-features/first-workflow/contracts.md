@@ -58,6 +58,13 @@ Set `Cache-Control: private, no-store`, safe Content-Disposition filenames and `
 
 HTTP errors use the shared JSON envelope before stream headers. Once bytes have streamed, the server cannot change the HTTP status or append JSON to a ZIP; terminate the stream on failure, log a request ID without content, and let the client show incomplete download. Successful header transmission alone is not completion.
 
+### BUILD-08 implementation
+
+- The import UI previews one UTF-8 file as plain text and imports without organization assignments by default. The API accepts optional owned collection and tag IDs. The committed note and its quota usage share the existing mutation transaction. An unchanged retry reuses its mutation ID.
+- The note editor downloads the last committed body. Bulk export uses a single statement snapshot, checks the 200-note and 10 MiB bounds before returning bytes, and streams a stored ZIP with a 30-second response deadline. The app checks the complete byte count before starting the browser download and displays the snapshot time.
+- The default bulk rate is five successful snapshot reservations per account per one-hour window. Configure it with `COSMICCORE_BULK_EXPORTS_PER_HOUR`. The database counter uses the new `note_export_usage` table, with one row per account. Reads share the existing session and active-account checks. No global concurrency or production capacity was selected.
+- The archive uses standard uncompressed ZIP entries with CRC-32 and ASCII-safe title/UUID filenames. No package is required. See the [implementation checkpoint](../../../PROJECT_STATUS.md) for evidence and pending acceptance.
+
 ## Session boundary
 
 Use the chosen auth SDK's documented server verifier; do not invent Google callback/token exchange or trust client session objects. After verification, resolve an internal account ID. Provider-managed callback paths remain dependent on the final integration. Google issuer/subject and auth-service user identity mapping must be verified against actual SDK fields before schema implementation.

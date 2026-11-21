@@ -15,6 +15,13 @@
       "when": 1794711675371,
       "tag": "0001_knowledge_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795191955366,
+      "tag": "0002_note_export_usage",
+      "breakpoints": true
     }
   ]
 }
