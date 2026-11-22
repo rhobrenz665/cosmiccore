@@ -35,7 +35,7 @@ function AppearanceState({ children, initial }: { children: React.ReactNode; ini
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const accountScoped = !!initial;
-  const resolvedColor = color === "system" ? (systemDark ? "dark" : "light") : color;
+  const resolvedColor = appearance === "cosmic" ? "dark" : color === "system" ? (systemDark ? "dark" : "light") : color;
 
   useEffect(() => {
     const storedAppearance = accountScoped ? null : localStorage.getItem(appearanceKey);
@@ -102,7 +102,7 @@ function AppearanceState({ children, initial }: { children: React.ReactNode; ini
   return <Context.Provider value={{
     appearance, color, resolvedColor, saving, message,
     setAppearance: (value) => void change(value, color),
-    setColor: (value) => void change(appearance, value),
+    setColor: (value) => { if (appearance === "minimal") void change(appearance, value); },
   }}>{children}</Context.Provider>;
 }
 

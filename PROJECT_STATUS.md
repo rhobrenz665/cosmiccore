@@ -508,3 +508,65 @@ Smallest next milestone: apply the reviewed migration to a development environme
 Applied the fourth Drizzle migration to pinned `cosmiccore_dev` and independently verified the deletion tables and paired Neon Auth schema. Added the explicit `--paired-auth` launcher option and verified that the local Google sign-in request returned the paired Auth initiation URL. Safari automation timed out before signed-in UI acceptance. The cleanup worker now checks that the managed user row is absent after either a successful API response or a replay returning 404. Typecheck, lint, all nine existing tests and the production build passed.
 
 Smallest next milestone: use a disposable Google account on the paired endpoint to check signed-in preference persistence and fresh confirmation. The worker management credential and cleanup scheduler are still missing from the test setup. Verify the live provider deletion and scheduled execution before enabling deletion. No production migration, account deletion, commit or push occurred.
+
+## Cosmic brand wireframe refresh — 2026-11-22
+
+Added a [standalone interactive wireframe](docs/05-design/wireframes/cosmiccore-brand-preview.html) based on the owner's Nebula brand reference. It shows the revised mark, Cosmic and Minimal treatments, light and dark, desktop and mobile layouts, and illustrative scenarios. The refreshed design is Proposed and awaits owner review. BUILD-09 implementation and acceptance status are unchanged.
+
+### Cosmic planet horizon preview — 2026-11-22
+
+Integrated the generated Nebula-inspired illustration into the Cosmic Dashboard and sign-in wireframes. Rendered the Cosmic desktop Dashboard, mobile sign-in and Minimal desktop Dashboard in Chrome. Next design milestone is owner review of the placement and responsive crop before any production UI implementation.
+
+### CosmicCore 2.0 UI audit — 2026-11-22
+
+Installed UI/UX Pro Max outside the project and ran its design-system, shadcn and UX searches. Recorded source and wireframe findings and a [proposed redesign and acceptance plan](docs/05-design/design-system.md#cosmiccore-20-audit-and-redesign-proposal--2026-11-22). The next design milestone is review of the shared shell, Dashboard and sign-in proposal across both appearances before implementation. BUILD-09 signed-in acceptance remains open.
+
+### CosmicCore 2.0 prototype refinement — 2026-11-22
+
+Updated the [interactive design preview](docs/05-design/wireframes/cosmiccore-brand-preview.html) for shell, Dashboard, sign-in and mobile review, with References and Chat availability screens. The next design milestone is owner review of this prototype before any application changes.
+
+### CosmicCore 2.0 appearance implementation — 2026-11-22
+
+Implemented the approved single Cosmic palette and Minimal Light, Dark and System modes with the existing saved preferences. Updated brand and artwork, shell, Dashboard hierarchy, sign-in, Knowledge filter controls, note toolbar and Chat availability. The next milestone is signed-in UI acceptance followed by planning the next Knowledge and editor refinements. BUILD-09 account deletion acceptance remains open.
+
+Verification passed for typecheck, lint, the nine existing tests, and the production build. Signed-out Chrome verified Cosmic, Minimal Light, Minimal Dark, and Minimal System on sign-in at 375 px or 1440 px. Only Cosmic requested the planet asset. Signed-in preference round trips, workspace keyboard flow and contrast measurement remain open.
+
+### UI enhancement workflow agreed — 2026-11-22
+
+Recorded the [three-skill workflow](docs/05-design/design-system.md#ui-enhancement-workflow). Next, gather signed-in UI evidence and prepare the design proposal, component mapping, and production-quality review for owner approval.
+
+### Appearance and Knowledge design review — 2026-11-22
+
+Prepared the [interactive review](docs/05-design/wireframes/cosmiccore-brand-preview.html) and [approval draft](docs/05-design/design-system.md#appearance-and-knowledge-approval-draft) using the installed three-skill workflow. Rendered desktop Cosmic Appearance and mobile-frame Minimal Knowledge in Chrome. Next milestone is owner design approval, then implementation and signed-in acceptance.
+
+### Cosmic reference alignment
+
+Refined the [Cosmic Dashboard preview](docs/05-design/wireframes/cosmiccore-brand-preview.html) using the supplied desktop and mobile references. Rendered both layouts in Chrome. Next milestone is owner review of the Cosmic Dashboard alongside Appearance and Knowledge before further app implementation.
+
+### Immersive Cosmic design review
+
+Refined the [Cosmic prototype](docs/05-design/wireframes/cosmiccore-brand-preview.html) with new orbit artwork, a distinct mobile crop and calmer working surfaces. Captured Chrome previews. The next milestone is owner review of the revised direction before further app implementation.
+
+### Immersive Cosmic implementation
+
+Implemented the approved orbit art, mobile crop, ink surfaces and violet active navigation. Fixed the signed-out image redirect by exempting only the artwork path from the auth proxy. Verified the JPEG returns 200 and the signed-out Dashboard still redirects. Typecheck, lint, nine existing tests, production build and signed-out Chrome theme checks passed. Next is signed-in desktop and mobile acceptance before the next UI improvement pass.
+
+### Immersive Cosmic narrow-screen acceptance
+
+Chrome contrast sampling with production CSS and a representative Dashboard fixture found the 320 px heading at 2.66:1 over the planet rim. Adjusted mobile hero spacing and the dark overlay. The final fixture passed without horizontal overflow at 320, 375, 800 and 1440 px. Minimum sampled contrast was 16.03:1 for the heading and 5.24:1 for the description across those widths. Actual sign-in showed a visible keyboard focus state at 320 and 1440 px. Production build, typecheck and lint passed.
+
+Signed-in workspace acceptance remains open. The paired launcher could not start a second Next.js development instance because this checkout already has a server on port 3000. Next milestone is to use a signed-in session on the paired development environment to verify Dashboard, Settings persistence, and mobile workspace focus.
+
+### Mobile workspace follow-up
+
+Applied the three-skill workflow to the existing mobile shell and More Sheet. More now communicates the active secondary destination, navigation icons are decorative, account feedback wraps below compact header controls, and the sheet can scroll with safe-area padding. Lint, production build, typecheck and diff whitespace checks passed.
+
+Started the reviewed production build at https://localhost:3001 on loopback with the isolated database and paired Auth. Verified Google sign-in initiation with no credentials. This temporary review server avoids the existing dev server on port 3000. Signed-in Dashboard, More Sheet focus return and appearance persistence still require a browser session.
+
+### Safari signed-in Dashboard checkpoint — 2026-11-23
+
+Restarted the loopback review server on port 3001 with isolated paired Auth and account deletion disabled. Safari opened the authenticated Dashboard and showed the workspace navigation, capture controls, and empty Notes and References sections. The session was in Minimal Light. The mobile More focus-return test and saved appearance round trip remain open. No application code changed during this checkpoint.
+
+### Safari appearance persistence checkpoint — 2026-11-23
+
+Observed the signed-in account in Cosmic and verified Cosmic was still selected after reloading Settings. The previous checkpoint observed Minimal Light. Restoring Minimal and checking its stored Light choice, plus closing the mobile More sheet with the keyboard and checking focus return, remain open.

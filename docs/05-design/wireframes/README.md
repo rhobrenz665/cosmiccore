@@ -51,3 +51,19 @@ Outstanding refinements: real conflict-comparison layout, collection/tag selecto
 ## Owner review — 2026-11-10
 
 Status: Approved as the initial design direction. The owner accepted the current wireframes for now and deferred further visual enhancements to a later update. This approval covers the starting layout/direction, not unfinished interactions, accessibility verification or application implementation. shadcn/ui remains the primary component foundation, with Tailwind CSS, Lucide icons and shared Cosmic/Minimal tokens. Required error/privacy/recovery behavior remains part of feature specifications even when not fully represented in the preview.
+
+## Cosmic brand review — 2026-11-22
+
+Open the [interactive brand wireframe](cosmiccore-brand-preview.html) in a browser. It carries forward the six original review screens and adds Settings, where appearance is managed. Use the review controls to switch screens, compare Cosmic and Minimal in light and dark, check the narrow layout, and look at sample empty and error states.
+
+The supplied CosmicCore Nebula Brand Identity image is a visual reference. The preview interprets its folded cyan-to-violet C and central star as a compact mark. Cosmic uses violet and blue atmosphere on the sign-in backdrop and workspace shell, with solid reading and editing surfaces. Minimal uses neutral surfaces and the same mark. This is a proposed brand treatment. Google sign-in and workspace actions use sample content and local navigation.
+
+### Planet horizon and production review
+
+The [planet horizon](cosmic-planet-horizon.jpg) is a 1440-pixel ImageGen illustration based on the supplied Nebula reference. Cosmic uses it on the sign-in backdrop and Dashboard hero. The hero uses a dark text overlay and a dedicated narrow-screen crop. Keep the artwork decorative and keep workspace reading surfaces solid.
+
+Before shipping, review the signed-in app with representative content at desktop and mobile widths in all four appearance/color combinations. Check long titles, loading, empty, error, and conflict states. Verify keyboard order, visible focus, contrast against the brightest image crops, zoom and screen-reader labels. Measure the artwork's effect on loading on a slower connection and verify that the artwork-free appearance does not request it.
+
+### CosmicCore 2.0 review pass — 2026-11-22
+
+The interactive preview now includes a shorter Minimal Dashboard header, a Cosmic planet hero, a dedicated resume row, grouped desktop utilities and a mobile More disclosure. References and Chat availability can be reviewed as sample screens. The Save reference button leads to the sample References screen. The feature flow remains represented by the existing specs.

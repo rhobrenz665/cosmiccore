@@ -234,10 +234,10 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   return <div data-note-unsaved={saveState.kind !== "saved" || changed} className={`note-editor-shell${focusMode ? " note-editor-focus" : ""}`}>
     <div className="note-editor-topline">
       <div className={`note-editor-status note-save-${saveState.kind}`} role="status" aria-live="polite">{statusText}</div>
-      {focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}
+      <div className="note-editor-actions">{focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}
+      <NoteLifecycleButton noteId={noteId} action="trash" getRevision={() => revisionRef.current} disabled={saveState.kind !== "saved" || changed || hasRetryRequest} onLockedChange={(locked) => { lifecycleLockedRef.current = locked; setLifecycleLocked(locked); }}/>
+      </div>
     </div>
-    <NoteLifecycleButton noteId={noteId} action="trash" getRevision={() => revisionRef.current} disabled={saveState.kind !== "saved" || changed || hasRetryRequest} onLockedChange={(locked) => { lifecycleLockedRef.current = locked; setLifecycleLocked(locked); }}/>
-    <p className="note-editor-step-notice">Your note saves automatically after a short pause. Keep this tab open until the status says Saved.</p>
 
     {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{hasRetryRequest && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
     {saveState.kind === "conflict" && <section className="note-conflict-card" aria-labelledby="note-conflict-title">

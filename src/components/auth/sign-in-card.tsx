@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { LoaderCircle, Sparkles } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/client";
 import { safeInternalRedirect } from "@/lib/auth/redirect";
@@ -65,8 +66,7 @@ export function SignInCard() {
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="sign-in-title">
         {deletionRequested && <p role="status">Account access has been blocked if your deletion request was confirmed. Live-data cleanup is processed separately.</p>}
-        <Link href="/" className="auth-brand"><span className="brand-mark"><Sparkles size={20} /></span>CosmicCore</Link>
-        <span className="eyebrow">YOUR PRIVATE KNOWLEDGE SPACE</span>
+        <Link href="/" className="auth-brand"><BrandMark/>CosmicCore</Link>
         <h1 id="sign-in-title">Welcome back.</h1>
         <p>Sign in with Google to open your private workspace.</p>
         {visibleError && <p className="auth-error" role="alert">{visibleError}</p>}

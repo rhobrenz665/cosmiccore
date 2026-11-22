@@ -250,7 +250,6 @@ html[data-appearance=cosmic] .hero, html[data-appearance=cosmic] .landing { back
 .note-actions-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 .step-preview-label { margin-bottom: 14px; color: var(--muted-foreground); font-size: 12px; }
 .note-source { min-height: 180px; overflow-wrap: anywhere; white-space: pre-wrap; font: 14px/1.7 var(--font-mono),monospace; }
-html[data-appearance=cosmic] .note-empty-state, html[data-appearance=cosmic] .new-note-card { background-image: radial-gradient(circle at 85% 5%, #9875e022, transparent 33%); }
 .note-editor-shell { max-width: 1440px; margin: 0 auto; }
 .note-editor-topline { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: -8px 0 10px; }
 .note-editor-status { color: var(--muted-foreground); font-size: 13px; font-weight: 650; }
@@ -346,3 +345,129 @@ html[data-appearance=cosmic] .note-empty-state, html[data-appearance=cosmic] .ne
 .note-lifecycle-action { margin-block: 0.75rem; }
 .note-lifecycle-action button { min-height: 44px; white-space: normal; }
 .note-lifecycle-action p { overflow-wrap: anywhere; margin-top: 0.5rem; }
+
+/* CosmicCore appearance palettes */
+html[data-appearance="minimal"] {
+  --background: #f8f9fb; --foreground: #20232c; --card: #fff; --card-foreground: #20232c;
+  --popover: #fff; --popover-foreground: #20232c; --muted: #eef0f3; --muted-foreground: #535965;
+  --secondary: #eef0f3; --secondary-foreground: #252934; --accent: #eeebf8; --accent-foreground: #32255b;
+  --border: #d7dae1; --input: #d7dae1; --sidebar: #f5f6f8; --sidebar-foreground: #252934;
+  --sidebar-border: #d7dae1; --sidebar-accent: #eeebf8; --sidebar-accent-foreground: #32255b;
+}
+html.dark[data-appearance="minimal"] {
+  --background: #15171c; --foreground: #f5f6f8; --card: #202329; --card-foreground: #f5f6f8;
+  --popover: #202329; --popover-foreground: #f5f6f8; --muted: #2b2e36; --muted-foreground: #bdc2ce;
+  --secondary: #2b2e36; --secondary-foreground: #f5f6f8; --accent: #353044; --accent-foreground: #f5f6f8;
+  --border: #424650; --input: #424650; --sidebar: #1b1d23; --sidebar-foreground: #f5f6f8;
+  --sidebar-border: #424650; --sidebar-accent: #353044; --sidebar-accent-foreground: #f5f6f8;
+}
+html[data-appearance="cosmic"] {
+  --background: #0b0b18; --foreground: #f8f6ff;
+  --card: #151625; --card-foreground: var(--foreground);
+  --popover: var(--card); --popover-foreground: var(--foreground);
+  --muted: #1d1b30; --muted-foreground: #c3bfd8;
+  --secondary: #211d35; --secondary-foreground: var(--foreground);
+  --accent: #30264c; --accent-foreground: var(--foreground);
+  --border: #46405e; --input: #655c83;
+  --sidebar: #10101f; --sidebar-foreground: var(--foreground);
+  --sidebar-accent: #2d2447; --sidebar-border: var(--border);
+  --primary: #bd9aff; --primary-foreground: #1c1238;
+  --ring: #d2bdff; --sidebar-ring: var(--ring);
+  --orbit-art: url("/brand/planet-orbit.jpg");
+  --orbit-backdrop: #09091a;
+}
+.cosmic-brand-mark {
+  position: relative; display: inline-block; flex: none; width: 36px; height: 36px;
+}
+.cosmic-brand-mark::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(148deg,#53dff4 10%,#4264ff 34%,#4b16db 57%,#ca43f2 88%);
+  clip-path: path("M 14 2 Q 18 -1 22 2 L 32 8 Q 37 11 34 15 Q 32 18 28 16 L 20 11 Q 18 10 15 12 L 10 15 L 10 22 L 17 26 Q 19 27 21 26 L 28 21 Q 32 19 35 23 Q 37 26 33 29 L 23 35 Q 18 38 14 35 L 4 29 Q 0 27 0 22 L 0 15 Q 0 10 4 8 Z");
+}
+.cosmic-brand-mark::after {
+  content: ""; position: absolute; inset: 12px 11px 11px 12px; background: #ceb8ff;
+  clip-path: polygon(50% 0,67% 33%,100% 50%,67% 67%,50% 100%,33% 67%,0 50%,33% 33%);
+}
+.auth-page { background-image: none; }
+html[data-appearance="cosmic"] .auth-page {
+  background-color: var(--orbit-backdrop);
+  background-image: linear-gradient(90deg, #09091a55, #09091a15), var(--orbit-art);
+  background-size: cover;
+  background-position: center 33%;
+}
+html[data-appearance="cosmic"] :is(.topbar, .mobile-nav) {
+  background: var(--sidebar);
+}
+html[data-appearance="cosmic"] .sidebar-link[aria-current="page"] {
+  border: 1px solid #68558f;
+}
+.dashboard-heading { display: grid; align-content: center; gap: 10px; }
+.dashboard-heading h1, .dashboard-heading p { margin: 0; }
+.dashboard-actions, .dashboard-resume, .note-editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.dashboard-actions { margin-top: 12px; }
+.dashboard-actions > a, .dashboard-actions button { min-height: 44px; }
+.dashboard-resume { justify-content: space-between; }
+html[data-appearance="cosmic"] .dashboard-heading {
+  min-height: 300px;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid #644e89;
+  border-radius: 16px;
+  background-color: var(--orbit-backdrop);
+  background-image: linear-gradient(90deg, #09091af5 6%, #09091af0 48%, #09091a18 75%), var(--orbit-art);
+  background-position: center 29%;
+  background-size: cover;
+  box-shadow: 0 14px 40px #07051365;
+}
+html[data-appearance="cosmic"] .dashboard-heading h1 {
+  max-inline-size: min(12ch, 60%);
+  font-size: clamp(36px, 4.7vw, 58px);
+  line-height: 1.06;
+  text-wrap: balance;
+}
+html[data-appearance="cosmic"] .dashboard-heading p { color: var(--muted-foreground); }
+.workspace-search { margin-right: auto; display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; color: var(--muted-foreground); }
+.workspace-search:hover { color: var(--foreground); }
+.sidebar-link[aria-current="page"] { box-shadow: inset 3px 0 var(--primary); }
+.note-editor-topline { flex-wrap: wrap; }
+@media (max-width: 767px) {
+  html { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .workspace-search { margin-right: 0; justify-content: center; min-width: 44px; }
+  .workspace-search span { display: none; }
+  .topbar { gap: 6px; padding-inline: 10px; }
+  .mobile-brand { font-size: 14px; }
+  html[data-appearance="cosmic"] .dashboard-heading {
+    align-content: end;
+    min-height: 330px;
+    padding: 106px 20px 20px;
+    background-image: linear-gradient(180deg, #0b0b1818 12px, #0b0b18ef 102px, #0b0b18), var(--orbit-art);
+    background-position: 75% center;
+  }
+  html[data-appearance="cosmic"] .dashboard-heading h1 {
+    max-inline-size: 14ch;
+    font-size: clamp(28px, 8vw, 36px);
+  }
+  html[data-appearance="cosmic"] .auth-page { background-position: 68% center; }
+}
+
+/* Keep mobile navigation and transient account feedback reachable at narrow widths. */
+.workspace-more-sheet {
+  max-height: 85dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.workspace-more-sheet .more-links a { min-height: 44px; }
+.workspace-more-sheet .more-links a[aria-current="page"] { background: var(--accent); color: var(--accent-foreground); }
+@media (max-width: 767px) {
+  .topbar { height: auto; min-height: 60px; flex-wrap: wrap; }
+  .topbar > button, .topbar .mobile-brand { min-height: 44px; }
+  .topbar > button { min-width: 44px; }
+  .topbar .signout-error {
+    flex: 1 0 100%;
+    order: 1;
+    max-width: none;
+    padding-bottom: 8px;
+    overflow-wrap: anywhere;
+  }
+  .mobile-link[data-current-section] { color: var(--primary); background: var(--accent); }
+}
