@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { DbTransaction } from "../db/transaction-session.ts";
-import { globalQuotaUsage, notes, quotaUsage } from "../db/schema.ts";
+import { appUsers, globalQuotaUsage, notes, quotaUsage } from "../db/schema.ts";
 
 const MAX_BATCH_SIZE = 100;
 const EPOCH = new Date(0);
@@ -14,7 +14,8 @@ export async function purgeExpiredNotesWithTransaction(withDbTransaction: <T>(wo
   }
   const owners = await withDbTransaction(async (tx) => {
     const rows = await tx.selectDistinct({ ownerId: notes.ownerId }).from(notes)
-      .where(and(sql`${notes.deletedAt} is not null`, sql`${notes.purgeAfter} <= clock_timestamp()`))
+      .innerJoin(appUsers, eq(appUsers.id, notes.ownerId))
+      .where(and(eq(appUsers.status, "active"), sql`${notes.deletedAt} is not null`, sql`${notes.purgeAfter} <= clock_timestamp()`))
       .orderBy(asc(notes.ownerId)).limit(batchSize);
     return rows.map((row) => row.ownerId);
   });
@@ -24,6 +25,9 @@ export async function purgeExpiredNotesWithTransaction(withDbTransaction: <T>(wo
       // Match application mutation ordering: owner lock, global usage,
       // account usage, then note rows. Keep this order across all writers.
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`cosmiccore:mutation:${ownerId}`}, 0))`);
+      const [owner] = await tx.select({ status: appUsers.status }).from(appUsers)
+        .where(eq(appUsers.id, ownerId)).for("share");
+      if (owner?.status !== "active") return 0;
       await tx.insert(globalQuotaUsage).values([
         { metric: "notes_count", windowStart: EPOCH }, { metric: "notes_bytes", windowStart: EPOCH },
       ]).onConflictDoNothing();
@@ -64,7 +68,8 @@ export async function purgeExpiredNotesWithTransaction(withDbTransaction: <T>(wo
   }
   const remainingExpired = await withDbTransaction(async (tx) => {
     const [row] = await tx.select({ id: notes.id }).from(notes)
-      .where(and(sql`${notes.deletedAt} is not null`, sql`${notes.purgeAfter} <= clock_timestamp()`)).limit(1);
+      .innerJoin(appUsers, eq(appUsers.id, notes.ownerId))
+      .where(and(eq(appUsers.status, "active"), sql`${notes.deletedAt} is not null`, sql`${notes.purgeAfter} <= clock_timestamp()`)).limit(1);
     return Boolean(row);
   });
   return { purgedCount, remainingExpired };

@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-21 | Phase: BUILD-08 implemented locally
+Status: In progress | Updated: 2026-11-21 | Phase: BUILD-09 migrated to isolated development
 
-Latest checkpoint: BUILD-08 is implemented on `codex/build-08-markdown-transfer`, based on `origin/main` after the BUILD-07 merge. The rate-limit migration is applied only to the isolated development database. The signed-in Safari round trip and synthetic two-account and concurrency checks passed. A second Google browser session and target-host performance remain unverified. See the [implementation backlog](docs/01-product/implementation-backlog.md).
+Latest checkpoint: BUILD-09 is on `codex/build-09-settings-account`, based on `origin/main` after the BUILD-08 merge. Settings, the deletion workflow and its operator worker are implemented. The migration is applied on isolated `cosmiccore_dev`. Account deletion remains disabled pending signed-in and provider acceptance. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -494,3 +494,17 @@ Added and started `npm run dev:isolated` as the repeatable HTTPS launch command 
 ## BUILD-08 handler acceptance with synthetic accounts
 
 Ran the actual import and export route handlers against pinned `cosmiccore_dev` with a test substitute at the Google identity boundary. Repeating an identical import with the same mutation ID returned the original note and kept one row. Reusing the ID with changed bytes returned 400. The other account received 404 for the individual export and an empty ZIP for its own bulk export. Four overlapping bulk requests at a test cap of two returned two successes and two 429s. Removed both synthetic accounts, their notes and counters, and reconciled their global quota deltas. The earlier Safari round trip covers real Google sign-in for one account. A second Google session and representative target-host performance remain unverified.
+
+## BUILD-09 implementation and verification — 2026-11-21
+
+Created `codex/build-09-settings-account` from current `main` after BUILD-08 merged. Settings shows a read-only Google profile, revision-checked account appearance controls shared with the header, Markdown transfer and Trash actions, AI availability, and sign-out with an unsaved-note prompt. Generated the preferences and account-deletion migration. Deletion uses a short-lived account-bound intent, a new verified Google session and typed confirmation, followed by an atomic access block and one cleanup job. An operator command processes quota-aware cleanup, verifies the configured Neon Auth target, retries provider errors, and expires completed deny records after seven days. The isolated launcher explicitly disables deletion because its Auth and app database environments are split.
+
+Typecheck, lint, all nine existing tests, and production build passed. A rollback-only check using the generated migration and real deletion code on pinned `cosmiccore_dev` verified same-session, stale-session, wrong-token and foreign-account rejection, confirmation replay, access blocking, simulated provider outage and retry, app content removal, and completed-record expiry. Confirmed rollback removed the test schema and fixtures. No provider account was deleted and no migration was permanently applied.
+
+Smallest next milestone: apply the reviewed migration to a development environment, verify signed-in preference persistence, and complete the Google confirmation and provider deletion run with a disposable identity on a paired database/Auth branch. Confirm scheduler execution before enabling deletion. Concurrent save/block, keyboard/mobile UI and target-host acceptance remain open.
+
+## BUILD-09 isolated migration and Auth pairing — 2026-11-21
+
+Applied the fourth Drizzle migration to pinned `cosmiccore_dev` and independently verified the deletion tables and paired Neon Auth schema. Added the explicit `--paired-auth` launcher option and verified that the local Google sign-in request returned the paired Auth initiation URL. Safari automation timed out before signed-in UI acceptance. The cleanup worker now checks that the managed user row is absent after either a successful API response or a replay returning 404. Typecheck, lint, all nine existing tests and the production build passed.
+
+Smallest next milestone: use a disposable Google account on the paired endpoint to check signed-in preference persistence and fresh confirmation. The worker management credential and cleanup scheduler are still missing from the test setup. Verify the live provider deletion and scheduled execution before enabling deletion. No production migration, account deletion, commit or push occurred.

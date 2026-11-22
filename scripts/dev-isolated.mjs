@@ -11,6 +11,7 @@ if (!existsSync(configPath)) {
 }
 
 function start(config) {
+  const pairedAuth = process.argv.includes("--paired-auth");
   let pooled;
   try {
     pooled = new URL(config.COSMICCORE_TEST_DATABASE_URL);
@@ -37,11 +38,20 @@ function start(config) {
     ? ["--experimental-https-key", key, "--experimental-https-cert", cert]
     : [];
 
-  console.log("Starting HTTPS with the isolated cosmiccore_dev database.");
+  const authOverride = pairedAuth ? {
+    NEON_AUTH_BASE_URL: "https://ep-rough-pond-azt24vit.neonauth.c-3.ap-southeast-1.aws.neon.tech/cosmiccore_dev/auth",
+  } : {};
+  console.log(`Starting HTTPS with cosmiccore_dev and ${pairedAuth ? "its paired Neon Auth" : "the existing Neon Auth"}.`);
   const child = spawn(process.execPath, [
     "node_modules/next/dist/bin/next", "dev", "--webpack", "--experimental-https", ...tlsArgs,
   ], {
-    env: { ...process.env, DATABASE_URL: pooled.href, DATABASE_URL_UNPOOLED: direct.href },
+    env: {
+      ...process.env,
+      ...authOverride,
+      DATABASE_URL: pooled.href,
+      DATABASE_URL_UNPOOLED: direct.href,
+      COSMICCORE_ACCOUNT_DELETION_ENABLED: "false",
+    },
     stdio: "inherit",
   });
   child.on("error", () => {

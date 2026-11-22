@@ -9,6 +9,7 @@
     "build": "next build --webpack",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:process-account-deletions": "node --experimental-strip-types scripts/process-account-deletions.mts",
     "db:check-transactions": "node --experimental-strip-types scripts/check-db-transactions.mts",
     "db:check-ownership": "node --experimental-strip-types scripts/check-db-ownership.mts",
     "db:check-mutations": "node --experimental-strip-types scripts/check-db-mutations.mts",

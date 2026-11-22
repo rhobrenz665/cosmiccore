@@ -1,6 +1,6 @@
 # Ordered implementation backlog
 
-Status: Proposed task plan — implementation unauthorized | Updated: 2026-11-10
+Status: Implementation in progress | Updated: 2026-11-10
 
 This refines the [feature backlog](feature-backlog.md) without replacing it. Task order reflects dependencies, not dates or estimates. The [readiness summary](../02-architecture/planning-readiness.md) identifies approved decisions, technical proposals and deferred scope. Finish/review each affected contract before implementing it; task listings are not permission to install, provision, commit, push or deploy.
 
@@ -98,6 +98,6 @@ Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interv
 
 ## Current implementation checkpoint
 
-BUILD-06 and BUILD-07 merged in [PR #5](https://github.com/rhobrenz665/cosmiccore/pull/5) and [PR #6](https://github.com/rhobrenz665/cosmiccore/pull/6). BUILD-08 is implemented locally. The export rate-limit migration is applied to the isolated development database and the Safari round trip passed. Finish the remaining transfer acceptance cases in project status. The remaining signed-in References and Knowledge/Dashboard checks are tracked in [project status](../../PROJECT_STATUS.md). Continue with BUILD-09 Settings and account deletion after transfer acceptance.
+BUILD-08 merged in [PR #7](https://github.com/rhobrenz665/cosmiccore/pull/7). BUILD-09 is implemented locally and migrated on isolated `cosmiccore_dev`. Verify preference persistence, fresh Google confirmation with a disposable identity, and provider deletion through the cleanup worker against the paired Auth endpoint. Track scheduled maintenance and production capacity gates in [project status](../../PROJECT_STATUS.md).
 
-See the [first workflow transfer contract](../04-features/first-workflow/contracts.md#transfer-route-handlers). Track the pending BUILD-05 maintenance trigger alongside release operations.
+The next feature is BUILD-10 versioned source preparation and retrieval. Register future chat, retrieval, and provider artifacts with the account-deletion cleanup contract when their schemas land.

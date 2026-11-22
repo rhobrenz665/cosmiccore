@@ -14,12 +14,18 @@ export const appUsers = pgTable(
     displayName: text("display_name"),
     avatarUrl: text("avatar_url"),
     status: text("status").notNull().default("active"),
+    appearance: text("appearance", { enum: ["cosmic", "minimal"] }).notNull().default("cosmic"),
+    colorScheme: text("color_scheme", { enum: ["light", "dark", "system"] }).notNull().default("system"),
+    preferencesRevision: integer("preferences_revision").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("app_users_auth_identity_key").on(table.authIssuer, table.authSubject),
     index("app_users_email_idx").on(table.email),
+    check("app_users_appearance_check", sql`${table.appearance} in ('cosmic', 'minimal')`),
+    check("app_users_color_scheme_check", sql`${table.colorScheme} in ('light', 'dark', 'system')`),
+    check("app_users_preferences_revision_check", sql`${table.preferencesRevision} > 0`),
     check("app_users_status_check", sql`${table.status} in ('active', 'deletion_pending', 'blocked')`),
   ],
 );
@@ -190,4 +196,27 @@ export const noteExportUsage = pgTable("note_export_usage", {
   used: integer("used").notNull(),
 }, (t) => [
   check("note_export_usage_used_check", sql`${t.used} > 0`),
+]);
+
+export const accountDeletionIntents = pgTable("account_deletion_intents", {
+  ownerId: uuid("owner_id").primaryKey().references(() => appUsers.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  originalSessionHash: text("original_session_hash").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, (t) => [index("account_deletion_intents_expiry_idx").on(t.expiresAt)]);
+
+export const accountDeletionJobs = pgTable("account_deletion_jobs", {
+  ownerId: uuid("owner_id").primaryKey().references(() => appUsers.id, { onDelete: "cascade" }),
+  id: uuid("id").notNull().defaultRandom().unique(),
+  stage: text("stage", { enum: ["queued", "provider_pending", "complete"] }).notNull().default("queued"),
+  requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+  availableAt: timestamp("available_at", { withTimezone: true }).notNull().defaultNow(),
+  lease: uuid("lease"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: text("last_error"),
+}, (t) => [
+  index("account_deletion_jobs_queue_idx").on(t.stage, t.availableAt),
+  check("account_deletion_jobs_stage_check", sql`${t.stage} in ('queued', 'provider_pending', 'complete')`),
 ]);

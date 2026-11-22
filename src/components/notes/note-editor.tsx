@@ -140,6 +140,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   useEffect(() => {
     if (saveState.kind === "saved") return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      if (document.documentElement.dataset.signingOut === "true") return;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -230,7 +231,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
 
   const statusText = saveState.kind === "saved" ? "Saved" : saveState.kind === "dirty" ? "Unsaved changes" : saveState.kind === "saving" ? "Saving…" : saveState.kind === "conflict" ? "Conflict needs your choice" : "Save needs attention";
 
-  return <div className={`note-editor-shell${focusMode ? " note-editor-focus" : ""}`}>
+  return <div data-note-unsaved={saveState.kind !== "saved" || changed} className={`note-editor-shell${focusMode ? " note-editor-focus" : ""}`}>
     <div className="note-editor-topline">
       <div className={`note-editor-status note-save-${saveState.kind}`} role="status" aria-live="polite">{statusText}</div>
       {focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}

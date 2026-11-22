@@ -21,6 +21,7 @@ export function SignInCard() {
   const [pending, setPending] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const callbackURL = safeInternalRedirect(searchParams.get("returnTo"));
+  const deletionRequested = searchParams.get("notice") === "deletion_requested";
   const queryError = searchParams.get("error");
   const visibleError = localError ?? (queryError ? errorMessages[queryError] ?? errorMessages.oauth_error : null);
 
@@ -63,6 +64,7 @@ export function SignInCard() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="sign-in-title">
+        {deletionRequested && <p role="status">Account access has been blocked if your deletion request was confirmed. Live-data cleanup is processed separately.</p>}
         <Link href="/" className="auth-brand"><span className="brand-mark"><Sparkles size={20} /></span>CosmicCore</Link>
         <span className="eyebrow">YOUR PRIVATE KNOWLEDGE SPACE</span>
         <h1 id="sign-in-title">Welcome back.</h1>
