@@ -220,3 +220,34 @@ export const accountDeletionJobs = pgTable("account_deletion_jobs", {
   index("account_deletion_jobs_queue_idx").on(t.stage, t.availableAt),
   check("account_deletion_jobs_stage_check", sql`${t.stage} in ('queued', 'provider_pending', 'complete')`),
 ]);
+
+export const retrievalVersions = pgTable("retrieval_versions", {
+  ...ownedRecord(),
+  noteId: uuid("note_id"),
+  referenceId: uuid("reference_id"),
+  revision: bigint("revision", { mode: "number" }).notNull(),
+  format: integer("format").notNull(),
+  hash: text("hash").notNull(),
+}, (t) => [
+  unique("retrieval_versions_owner_id_key").on(t.ownerId, t.id),
+  unique("retrieval_versions_note_key").on(t.ownerId, t.noteId),
+  unique("retrieval_versions_reference_key").on(t.ownerId, t.referenceId),
+  foreignKey({ name: "retrieval_versions_note_fk", columns: [t.ownerId, t.noteId], foreignColumns: [notes.ownerId, notes.id] }).onDelete("cascade"),
+  foreignKey({ name: "retrieval_versions_reference_fk", columns: [t.ownerId, t.referenceId], foreignColumns: [references.ownerId, references.id] }).onDelete("cascade"),
+  check("retrieval_versions_one_source", sql`num_nonnulls(${t.noteId}, ${t.referenceId}) = 1`),
+  check("retrieval_versions_metadata_check", sql`${t.revision} > 0 and ${t.format} > 0 and ${t.hash} ~ '^[0-9a-f]{64}$'`),
+]);
+
+export const retrievalChunks = pgTable("retrieval_chunks", {
+  ownerId: uuid("owner_id").notNull(),
+  versionId: uuid("version_id").notNull(),
+  ordinal: integer("ordinal").notNull(),
+  heading: text("heading"),
+  start: integer("start_offset").notNull(),
+  end: integer("end_offset").notNull(),
+  text: text("body").notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.ownerId, t.versionId, t.ordinal] }),
+  foreignKey({ name: "retrieval_chunks_version_fk", columns: [t.ownerId, t.versionId], foreignColumns: [retrievalVersions.ownerId, retrievalVersions.id] }).onDelete("cascade"),
+  check("retrieval_chunks_bounds_check", sql`${t.ordinal} between 0 and 511 and ${t.start} >= 0 and ${t.end} >= ${t.start} and ${t.end} - ${t.start} <= 1500`),
+]);

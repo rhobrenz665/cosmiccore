@@ -574,3 +574,9 @@ Observed the signed-in account in Cosmic and verified Cosmic was still selected 
 ### BUILD-10 source preparation checkpoint — 2026-11-23
 
 Implemented and tested the first local retrieval slice. Source preparation creates deterministic revision-format hashes and bounded heading-aware Markdown chunks with original offsets, Unicode boundaries, fenced-code handling, and explicit byte and chunk limits. Four targeted tests, typecheck and lint passed. The next slice is durable version activation and owner-scoped lexical retrieval. BUILD-09 live deletion acceptance remains open.
+
+### BUILD-10 durable retrieval core — 2026-11-23
+
+Generated the retrieval storage migration and implemented transactional activation of one owned source version at a time, with bounded insert batches and PostgreSQL lexical ranking. The reader joins live source identity and revision, excludes Trash, and caps results at six and two per source. Ownership and cascading deletion are enforced in the schema. Authenticated server-only entry points derive the owner from the current session.
+
+The pinned isolated database passed a rollback-only integration check for foreign access, idempotent indexing, stale revisions, Trash and restore, reference deletion, and account blocking. The migration and fixtures rolled back together. Chunk tests, typecheck and lint passed. Next is indexing invocation/status on normal source screens, distinct retry/failure behavior, and retrieval quality evaluation before calling BUILD-10 complete. BUILD-09 live Auth deletion remains open, and BUILD-11 has not started.
