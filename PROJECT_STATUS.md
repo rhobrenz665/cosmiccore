@@ -584,3 +584,7 @@ The pinned isolated database passed a rollback-only integration check for foreig
 ### BUILD-10 source indexing and lexical evaluation — 2026-11-23
 
 Wired Notes and References to authenticated indexing of saved revisions with ready, pending, and retry feedback. Note autosave advances the displayed revision. Ordinary edits and reads stay available if indexing fails. The isolated rollback check verified lifecycle and ownership plus 24 synthetic retrieval cases. Stopword handling and partial term matching improved natural-language questions from 0/6 to 6/6. Exact queries passed 12/12, paraphrases 0/3, and no-match queries 3/3. The 18/21 overall answerable result falls below the proposed 90% target. Next milestone is isolated signed-in source-panel verification and agreement on how to improve paraphrase recall. No migration committed to the database, provider call, or push occurred.
+
+### BUILD-10 Safari acceptance checkpoint — 2026-11-23
+
+Applied migration 0004 to isolated `cosmiccore_dev` and restarted the loopback review server with paired Auth. Signed-in Safari opened the existing test note. The source panel moved from awaiting indexing to indexing to indexed, and still showed indexed after reloading. Reference UI and retry behavior remain unverified in Safari. The 85.7% lexical recall result still falls short of the proposed 90% gate.
