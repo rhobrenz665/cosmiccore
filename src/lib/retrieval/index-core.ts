@@ -31,7 +31,7 @@ export async function indexSource(tx: DbTransaction, ownerId: string, source: So
     eq(source.kind === "note" ? retrievalVersions.noteId : retrievalVersions.referenceId, source.id));
   const [previous] = await tx.select({ revision: retrievalVersions.revision, format: retrievalVersions.format })
     .from(retrievalVersions).where(key);
-  if (previous?.revision === record.revision && previous.format === CHUNK_FORMAT) return;
+  if (previous?.revision === record.revision && previous.format === CHUNK_FORMAT) return record.revision;
 
   const { hash, chunks } = prepareSource(record.title, record.body);
   await tx.delete(retrievalVersions).where(key);
@@ -42,6 +42,7 @@ export async function indexSource(tx: DbTransaction, ownerId: string, source: So
     await tx.insert(retrievalChunks).values(chunks.slice(first, first + 100)
       .map(chunk => ({ ownerId, versionId: version.id, ...chunk })));
   }
+  return record.revision;
 }
 
 export { requireActiveOwner };

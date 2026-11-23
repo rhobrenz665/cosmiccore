@@ -7,6 +7,8 @@ import { NoteEditor } from "@/components/notes/note-editor";
 import { DataAccessError } from "@/lib/db/owned-data";
 import { getNoteEditorData } from "@/lib/notes/service";
 
+import { getIndexedRevision } from "@/lib/retrieval/service";
+
 export const dynamic = "force-dynamic";
 
 export default async function NotePage({ params, searchParams }: {
@@ -26,8 +28,12 @@ export default async function NotePage({ params, searchParams }: {
     return <div className="page-wrap"><section className="note-state-card" role="alert"><h1>Note temporarily unavailable</h1><p>Try again in a moment. Your saved note remains private.</p><Link className="secondary-link" href="/notes">Back to notes</Link></section></div>;
   }
   const { note, tagIds, collections, tags, linkedReferences } = editorData;
+  const indexedRevision = await getIndexedRevision({ kind: "note", id: note.id }).catch(error => {
+    unstable_rethrow(error);
+    return undefined;
+  });
   return <div className="page-wrap"><div className="page-heading"><Link className="text-link" href="/notes"><ArrowLeft size={16}/> All notes</Link><span className="eyebrow"><FileText size={15}/> PRIVATE NOTE</span><h1>{note.title || "Untitled"}</h1><p>Last saved {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(note.updatedAt)}</p></div>
-    <NoteEditor noteId={note.id} initialTitle={note.title} initialBody={note.body} initialRevision={note.revision} initialCollectionId={note.collectionId} initialTagIds={tagIds} collections={collections} tags={tags}/>
+    <NoteEditor noteId={note.id} initialTitle={note.title} initialBody={note.body} initialRevision={note.revision} initialIndexedRevision={indexedRevision} initialCollectionId={note.collectionId} initialTagIds={tagIds} collections={collections} tags={tags}/>
     <section className="mt-6 space-y-2" aria-labelledby="note-export">
       <h2 className="font-semibold" id="note-export">Export Markdown</h2>
       <p className="text-sm text-muted-foreground">Downloads the last saved version. Wait for the editor to show Saved to include your latest changes.</p>

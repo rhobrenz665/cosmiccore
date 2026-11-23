@@ -21,7 +21,14 @@ export async function retrieveSources(tx: DbTransaction, ownerId: string, input:
   await requireActiveOwner(tx, ownerId);
 
   const { rows } = await tx.execute<RetrievalMatch>(sql`
-    with search_query as (select plainto_tsquery('simple', ${query}) as terms),
+    with tokens as (
+      select word from unnest(tsvector_to_array(to_tsvector('simple', ${query}))) as words(word)
+      where to_tsvector('english', word) <> ''::tsvector
+    ), search_query as (
+      select to_tsquery('simple', string_agg(quote_literal(word), ' | ' order by word)) as terms,
+        to_tsquery('simple', string_agg(quote_literal(word), ' & ' order by word)) as all_terms
+      from tokens
+    ),
     eligible as (
       select v.id, case when n.id is not null then 'note' else 'reference' end as kind,
         coalesce(n.id, r.id) as source_id, v.revision::float8 as revision,
@@ -35,7 +42,7 @@ export async function retrieveSources(tx: DbTransaction, ownerId: string, input:
         and (n.id is not null or r.id is not null)
     ), ranked as (
       select e.kind, e.source_id, e.revision, e.title, c.ordinal, c.heading, c.body,
-        ts_rank_cd(document, q.terms, 32) as score
+        (case when document @@ q.all_terms then 1 else 0 end) + ts_rank_cd(document, q.terms, 32) as score
       from eligible e
       join retrieval_chunks c on c.owner_id = ${ownerId} and c.version_id = e.id
       cross join search_query q

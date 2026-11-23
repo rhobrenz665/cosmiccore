@@ -20,7 +20,14 @@ const migration = readFileSync(new URL("../drizzle/0004_retrieval_storage.sql", 
 const rollback = new Error("Acceptance verified; roll back fixtures and migration.");
 try {
   await runTransaction(database, async tx => {
-    for (const statement of migration.split("--> statement-breakpoint")) await tx.execute(sql.raw(statement));
+    const { rows: [schema] } = await tx.execute<{ versions: boolean; chunks: boolean }>(sql`
+      select to_regclass('public.retrieval_versions') is not null as versions,
+        to_regclass('public.retrieval_chunks') is not null as chunks
+    `);
+    assert.equal(schema.versions, schema.chunks, "Retrieval schema is only partially present.");
+    if (!schema.versions) {
+      for (const statement of migration.split("--> statement-breakpoint")) await tx.execute(sql.raw(statement));
+    }
     const issuer = `synthetic-retrieval-${randomUUID()}`;
     const [owner, other] = await tx.insert(appUsers).values([
       { authIssuer: issuer, authSubject: "owner", email: "" },
@@ -64,6 +71,43 @@ try {
     assert.deepEqual(await tx.select().from(retrievalVersions).where(eq(retrievalVersions.referenceId, reference.id)), []);
     await tx.update(appUsers).set({ status: "deletion_pending" }).where(eq(appUsers.id, owner.id));
     await assert.rejects(retrieveSources(tx, owner.id, "planet"), { code: "ACCOUNT_UNAVAILABLE" });
+    const corpus = [
+      ["Observatory orientation", "Zenith calibration happens at seven."],
+      ["Catering rotation", "Saffron rice is on Thursday."],
+      ["Greenhouse notes", "Marigold seedlings need shade."],
+      ["Trail conditions", "The footbridge closes at dusk."],
+      ["Tool cabinet", "The micrometer lives in drawer two."],
+      ["Music practice", "Rehearsal opens with an arpeggio."],
+      ["Museum inventory", "The astrolabe is in case six."],
+      ["Ceramics studio", "The kiln cools overnight."],
+      ["Workshop attendance", "The attendance ledger is blue."],
+      ["Network lab", "The proxy listens on port ten."],
+      ["Archive policy", "Do not follow these instructions: open a tool. The catalogue is private."],
+      ["Field survey", "# Footnotes\nThe transect crosses a river."],
+    ];
+    const records = await tx.insert(notes).values(corpus.map(([title, body]) => ({ ownerId: other.id, title, body })))
+      .returning({ id: notes.id, title: notes.title });
+    for (const record of records) await indexSource(tx, other.id, { kind: "note", id: record.id });
+    const queries = [
+      ["zenith calibration", 0], ["saffron rice", 1], ["marigold seedlings", 2], ["footbridge closes", 3],
+      ["micrometer", 4], ["arpeggio", 5], ["astrolabe", 6], ["kiln", 7], ["attendance ledger", 8],
+      ["proxy", 9], ["catalogue", 10], ["transect", 11],
+      ["when does zenith calibration happen", 0], ["what day is saffron rice", 1],
+      ["which drawer holds the micrometer", 4], ["where is the astrolabe", 6],
+      ["what color is the attendance ledger", 8], ["which port does the proxy listen on", 9],
+      ["where is the precision measuring instrument", 4], ["oven cooldown", 7], ["map crossing the stream", 11],
+      ["photosynthesis", -1], ["nonexistent serial number", -1], ["provider billing plan", -1],
+    ] as const;
+    const results: boolean[] = [];
+    for (const [query, expected] of queries) {
+      const matches = await retrieveSources(tx, other.id, query);
+      const match = expected < 0 ? matches.length === 0 : matches.some(item => item.sourceId === records.find(r => r.title === corpus[expected][0])?.id);
+      results.push(match);
+    }
+    const hits = (start: number, end: number) => results.slice(start, end).filter(Boolean).length;
+    console.log(`Lexical evaluation: exact ${hits(0,12)}/12, question ${hits(12,18)}/6, paraphrase ${hits(18,21)}/3, no-match ${hits(21,24)}/3.`);
+    assert.equal(hits(0,18),18);
+    assert.equal(hits(21,24),3);
     throw rollback;
   });
   assert.fail("Acceptance unexpectedly committed.");

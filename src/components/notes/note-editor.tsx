@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
+import { SourceIndexStatus } from "@/components/retrieval/source-index-status";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
 import { MAX_BODY_BYTES, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
@@ -29,7 +30,8 @@ function sameDraft(left: Draft, right: Draft) {
   return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
+export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialIndexedRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
+  initialIndexedRevision?: number | null; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [acknowledgedDraft, setAcknowledgedDraft] = useState<Draft>(() => canonicalDraft(initialDraft));
@@ -44,6 +46,12 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   const draftRef = useRef(draft);
   const acknowledgedRef = useRef<Draft>(canonicalDraft(draft));
   const revisionRef = useRef(initialRevision);
+  const [savedRevision, setSavedRevision] = useState(initialRevision);
+
+  function trackSavedRevision(revision: number) {
+    revisionRef.current = revision;
+    setSavedRevision(revision);
+  }
   const retryRequestRef = useRef<SaveRequest | null>(null);
   const pumpSaveRef = useRef<() => Promise<void>>(async () => {});
   const inFlightRef = useRef(false);
@@ -110,7 +118,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
 
     retryRequestRef.current = null;
     setHasRetryRequest(false);
-    revisionRef.current = result.revision;
+    trackSavedRevision(result.revision);
     const acknowledged = { title: request.title, body: request.body, collectionId: request.collectionId, tagIds: request.tagIds };
     acknowledgedRef.current = acknowledged;
     setAcknowledgedDraft(acknowledged);
@@ -159,7 +167,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     setTags(latest.tags);
     conflictRef.current = false;
     retryRequestRef.current = null;
-    revisionRef.current = latest.revision;
+    trackSavedRevision(latest.revision);
     const acknowledged = canonicalDraft(next);
     acknowledgedRef.current = acknowledged;
     setAcknowledgedDraft(acknowledged);
@@ -182,7 +190,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
         tagIds: draftRef.current.tagIds.filter((id) => validTags.has(id)),
       });
     }
-    revisionRef.current = saveState.latest.revision;
+    trackSavedRevision(saveState.latest.revision);
     conflictRef.current = false;
     setSaveState({ kind: "dirty" });
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -196,7 +204,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     ].sort((a, b) => a.displayName.localeCompare(b.displayName)));
     if (action === "delete") {
       if (noteRevision !== undefined) {
-        revisionRef.current = noteRevision;
+        trackSavedRevision(noteRevision);
         if (kind === "collection" && acknowledgedRef.current.collectionId === id) {
           const acknowledged = { ...acknowledgedRef.current, collectionId: null };
           acknowledgedRef.current = acknowledged;
@@ -283,6 +291,10 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
       </section>}
     </div>
     </fieldset>
+    <div hidden={focusMode}>
+      <SourceIndexStatus source={{ kind: "note", id: noteId }} revision={savedRevision}
+        initialIndexedRevision={initialIndexedRevision} disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
+    </div>
   </div>;
 }
 

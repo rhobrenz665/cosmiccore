@@ -9,6 +9,9 @@ import { DataAccessError } from "@/lib/db/owned-data";
 import { normalizeReferenceUrl, ReferenceInputError } from "@/lib/references/rules";
 import { getReference } from "@/lib/references/service";
 
+import { getIndexedRevision } from "@/lib/retrieval/service";
+import { SourceIndexStatus } from "@/components/retrieval/source-index-status";
+
 export const dynamic = "force-dynamic";
 
 export default async function ReferenceDetailPage({ params, searchParams }: {
@@ -46,6 +49,10 @@ export default async function ReferenceDetailPage({ params, searchParams }: {
   const collection = reference.collections.find((choice) => choice.id === reference.collectionId);
   const tags = reference.tags.filter((tag) => reference.tagIds.includes(tag.id));
 
+  const indexedRevision = await getIndexedRevision({ kind: "reference", id: reference.id }).catch(error => {
+    unstable_rethrow(error);
+    return undefined;
+  });
   return (
     <div className="page-wrap">
       <Link className="secondary-link mb-5" href="/references"><ArrowLeft size={16} aria-hidden="true" /> References</Link>
@@ -82,6 +89,7 @@ export default async function ReferenceDetailPage({ params, searchParams }: {
           <ReferenceMutationButton command={{ type: "delete", referenceId: reference.id, expectedRevision: reference.revision }} />
         </div>
       </article>
+      <SourceIndexStatus key={reference.revision} source={{ kind: "reference", id: reference.id }} revision={reference.revision} initialIndexedRevision={indexedRevision} />
       <section className="mt-6 space-y-3" aria-labelledby="reference-notes">
         <h2 className="font-semibold" id="reference-notes">{picker ? "Choose an active note" : "Linked notes"}</h2>
         <Link className="secondary-link" href={picker ? detailUrl : `${detailUrl}?pick=1`}>{picker ? "Show linked notes" : "Manage note links"}</Link>
