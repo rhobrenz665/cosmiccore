@@ -588,3 +588,7 @@ Wired Notes and References to authenticated indexing of saved revisions with rea
 ### BUILD-10 Safari acceptance checkpoint — 2026-11-23
 
 Applied migration 0004 to isolated `cosmiccore_dev` and restarted the loopback review server with paired Auth. Signed-in Safari opened the existing test note. The source panel moved from awaiting indexing to indexing to indexed, and still showed indexed after reloading. Reference UI and retry behavior remain unverified in Safari. The 85.7% lexical recall result still falls short of the proposed 90% gate.
+
+### BUILD-10 Safari reference indexing checkpoint — 2026-11-23
+
+Created a labeled synthetic reference in the isolated signed-in Safari workspace and verified the saved version reached indexed status through the normal reference detail panel. The synthetic reference remains available for later checks. Safari failure and retry behavior remains open. BUILD-10 also remains below the proposed recall gate on the synthetic corpus. The current backlog calls for a separate accepted plan before adding embeddings.
