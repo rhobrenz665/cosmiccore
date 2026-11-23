@@ -1,5 +1,6 @@
 "use server";
 
+import { selectNotePassage } from "@/lib/retrieval/note-passage";
 import { unstable_rethrow } from "next/navigation";
 import { DataAccessError } from "@/lib/db/owned-data";
 import { getPrivateNote } from "@/lib/db/private-data";
@@ -18,13 +19,13 @@ export async function previewNoteQuestion(input: { noteId: string; revision: num
     const body = note.body.trim();
     if (!body) return { ok: false as const, message: "Add and save some text in this note first." };
 
-    const characters = Array.from(body);
+    const excerpt = selectNotePassage(body, input.question);
+    if (!excerpt) return { ok: false as const, message: "No matching passage found. Try a specific word or phrase from the note." };
     return {
       ok: true as const,
       revision: note.revision,
       title: note.title || "Untitled",
-      excerpt: characters.slice(0, 600).join(""),
-      truncated: characters.length > 600,
+      excerpt,
     };
   } catch (error) {
     unstable_rethrow(error);

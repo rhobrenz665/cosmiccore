@@ -2,7 +2,17 @@
 
 Status: Proposed detailed design | Updated: 2026-11-10
 
-## Scope and components
+## Search in the current application
+
+| Entry point | Sources and authorization | Result |
+| --- | --- | --- |
+| Knowledge Base | PostgreSQL searches the signed-in owner's active notes and saved references with the selected filters. | Ranked, paginated resources that open in the workspace. |
+| Ask about this note | The server reads the open note through the private note service and verifies its saved revision. Passage selection receives only the question and that note's text. | A bounded source preview in the editor. |
+| Cross-library retrieval | The retrieval service searches indexed chunks for the active owner and checks each source's current revision and deletion state. | Ranked passages for future library-wide questions. |
+
+Opening a note already identifies its source. Asking a question there requires one authorized note read and local passage selection. Preparing a library index is a separate operation. Hosted answer generation is a later step with its own privacy and usage gates.
+
+## Proposed hosted chat architecture
 
 Online free-API inference is current scope; Ollama/Qwen ~7B is future scope.
 GroqCloud Free with openai/gpt-oss-20b is the approved initial hosted-model planning choice. Provider access, tokenizer behavior, privacy settings, quotas, and runtime performance require validation before enabling AI Chat.

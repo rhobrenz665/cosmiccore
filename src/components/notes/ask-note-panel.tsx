@@ -19,7 +19,7 @@ export function AskNotePanel({ noteId, revision, disabled }: {
 
   return <details className="my-4 rounded-xl border border-border bg-card p-4">
     <summary className="min-h-11 cursor-pointer content-center font-semibold">Ask about this note</summary>
-    <p className="pb-3 text-sm text-muted-foreground">Source preview only. It uses this saved note and shows an excerpt without generating an answer.</p>
+    <p className="pb-3 text-sm text-muted-foreground">Find a passage in this saved note using words from your question.</p>
     <form className="flex flex-col gap-2" onSubmit={event => {
       event.preventDefault();
       if (disabled || pending || !question.trim()) return;
@@ -38,7 +38,7 @@ export function AskNotePanel({ noteId, revision, disabled }: {
         onChange={event => { setQuestion(event.target.value); setAttempt(null); }} disabled={pending}
         className="w-full rounded-lg border border-input bg-background p-3" />
       <Button type="submit" className="min-h-11 self-start" disabled={disabled || pending || !question.trim()}>
-        {pending ? "Loading preview…" : "Preview source"}
+        {pending ? "Loading preview…" : "Find passage"}
       </Button>
     </form>
     <div className="mt-3 text-sm" role="status">
@@ -47,7 +47,7 @@ export function AskNotePanel({ noteId, revision, disabled }: {
         : result?.ok ? <>
           <p className="font-semibold">Source · {result.title}</p>
           <blockquote className="mt-2 border-l-2 border-border pl-3 whitespace-pre-wrap wrap-anywhere">
-            {result.excerpt}{result.truncated ? "…" : ""}
+            {result.excerpt}
           </blockquote>
         </> : result?.message}
     </div>

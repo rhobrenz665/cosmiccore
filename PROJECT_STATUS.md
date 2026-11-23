@@ -604,3 +604,7 @@ Owner chose to start with questions directly in a note. Implemented a local Ask 
 The next smallest milestone is verifying the panel on a signed-in test note and connecting bounded provider-backed answers after the provider and privacy gates are met. Broader retrieval remains a separate enhancement.
 
 Signed-in Safari verified the panel on the existing isolated test note. A sample question displayed the open note as the source and returned its excerpt. Lint, typecheck and production build passed.
+
+### Question-aware note search — 2026-11-24
+
+Ask about this note selects a passage from the authorized saved revision using words in the question and reports when it finds no match. Focused tests cover different questions on the same note and a match late in Unicode text. Knowledge Base search and indexed cross-library retrieval have separate entry points, documented in the [search architecture](docs/03-technical/rag-architecture.md). The next milestone is signed-in verification of both match and no-match behavior. Hosted answers remain gated on provider privacy and usage checks.
