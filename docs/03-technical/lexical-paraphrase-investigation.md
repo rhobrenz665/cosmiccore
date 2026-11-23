@@ -1,0 +1,31 @@
+# PostgreSQL lexical retrieval and paraphrases
+
+Status: Proposed | Updated: 2026-11-23
+
+The BUILD-10 lexical baseline found supporting sources for 12/12 exact queries, 6/6 natural-language questions with word overlap, and 0/3 held-out paraphrases. All three no-evidence queries returned no evidence. That puts answerable-query recall at 18/21 (85.7%), below the proposed 90% gate. The experiment used synthetic content without models or embeddings. The sample surfaces a failure mode and leaves general recall unmeasured. [RAG evaluation](../06-testing/rag-evaluation.md)
+
+## What PostgreSQL can match
+
+- **Word forms.** The English Snowball stemmer can bring common variants such as `rat` and `rats` to the same lexeme when the document and query use compatible normalization. The current retrieval query uses `english` only to filter stop words, and uses `simple` for matching. A separate stemmed pass could recover inflections. Keep exact matching available for identifiers, proper names and mixed-language notes. [PostgreSQL dictionaries](https://www.postgresql.org/docs/current/textsearch-dictionaries.html), [retrieval query](../../src/lib/retrieval/search-core.ts)
+- **Known synonyms and phrases.** PostgreSQL's synonym dictionary maps individual words using a server-side `.syn` file. Its thesaurus supports configured multiword phrases with a `.ths` file and a normalizing subdictionary. Thesaurus changes require rebuilding affected full-text indexes when the dictionary is used for indexing. SQL-level `ts_rewrite` can expand a matching query expression with curated alternatives without reindexing. A phrase-sensitive rewrite needs ordered query terms. The current pipeline deduplicates and sorts terms, so it would need to recognize phrases before losing their order. [PostgreSQL dictionaries](https://www.postgresql.org/docs/current/textsearch-dictionaries.html), [query rewriting](https://www.postgresql.org/docs/current/textsearch-features.html), [retrieval query](../../src/lib/retrieval/search-core.ts)
+- **Spelling variants.** `pg_trgm` scores shared three-character sequences. PostgreSQL documents using a vocabulary of original words to suggest corrections for misspelled input. For CosmicCore, a vocabulary derived from private sources would need to be scoped to the active owner and eligible sources, including for suggestions. Trigram overlap reflects spelling, so a match between words with unrelated meanings is possible. [PostgreSQL trigram matching](https://www.postgresql.org/docs/current/pgtrgm.html)
+- **Query syntax and intent.** PostgreSQL supports Boolean combinations, phrases, prefix matches, and ranking based on lexeme frequency, proximity and field weights. `websearch_to_tsquery` treats unquoted terms as a conjunction and adds quoted phrases, explicit OR and exclusion syntax. These operators work on the supplied lexemes. From those mechanics, a query that shares no eligible lexemes with its evidence needs an explicit mapping or another retrieval signal. Relaxing AND to OR helps when at least one term overlaps and can also admit incidental matches. [PostgreSQL query parsing and ranking](https://www.postgresql.org/docs/current/textsearch-controls.html), [text-search types](https://www.postgresql.org/docs/current/datatype-textsearch.html)
+
+## Proposed follow-up
+
+1. Keep the existing lexical query as the baseline. Compare a supplementary English stemming pass and a small, versioned query-time alias list for known terms and acronyms. Derive the aliases from examples outside the held-out set. Avoid file-backed dictionaries until a measured benefit justifies their deployment and maintenance.
+2. Evaluate on fresh labeled questions with inflections, spelling errors, known aliases, unseen paraphrases with no shared content words, similar-but-irrelevant sources, and explicit no-evidence cases. Report supporting-source recall in the final six returned chunks, results by cohort, and any unrelated chunks on no-evidence queries. Preserve the existing two-chunk cap per source, current-revision and ownership filters, and empty-context behavior. [RAG architecture](rag-architecture.md), [RAG evaluation](../06-testing/rag-evaluation.md)
+3. If unseen paraphrases still miss the gate, bring a separately approved hybrid retrieval evaluation to ADR-005. Compare against the same lexical baseline and use synthetic content first. Evaluate recall, false positives, privacy, cost and latency before deciding whether to adopt embeddings. [RAG storage decision](../02-architecture/architecture-decisions.md#adr-005-rag-storage), [BUILD-10 backlog](../01-product/implementation-backlog.md#build-10--versioned-rag-source-preparation-and-retrieval)
+
+## Read-only PostgreSQL experiments
+
+Compared the two configurations over the same 12 synthetic notes and 24 questions. The comparison reproduced weighted title/body ranking and the final six-result limit. It was a simplified corpus-only query, while the production lifecycle and ownership harness ran separately.
+
+| Configuration | Exact | Word-overlap questions | Paraphrases | Correct no-evidence | Answerable recall |
+| --- | --- | --- | --- | --- | --- |
+| Current simple matching | 12/12 | 6/6 | 0/3 | 3/3 | 18/21 (85.7%) |
+| English stemming | 12/12 | 6/6 | 1/3 | 3/3 | 19/21 (90.5%) |
+
+English recovered the field-survey note by matching “crossing” with “crosses.” Adding six unrelated crossing notes pushed the survey to rank 7, outside the top six, under the same weighting. English produced no meaningful overlap for the instrument or kiln pairs. An exploratory hand-written alias for each pair produced matches, but those aliases came from the labeled answers. The control examples also showed why broad terms like “oven” and “measuring instrument” can refer to several valid objects.
+
+Do not count 90.5% on the original corpus as robust evidence that the gate is met. The result depends on one weak match, and the challenge case dislodges it. Keep the baseline while expanding the held-out test set with distractors, mixed-language notes, and domain aliases derived independently of evaluation questions. The experiments were read-only, with no installed extensions, embeddings, inference, or runtime change.

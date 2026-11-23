@@ -592,3 +592,7 @@ Applied migration 0004 to isolated `cosmiccore_dev` and restarted the loopback r
 ### BUILD-10 Safari reference indexing checkpoint — 2026-11-23
 
 Created a labeled synthetic reference in the isolated signed-in Safari workspace and verified the saved version reached indexed status through the normal reference detail panel. The synthetic reference remains available for later checks. Safari failure and retry behavior remains open. BUILD-10 also remains below the proposed recall gate on the synthetic corpus. The current backlog calls for a separate accepted plan before adding embeddings.
+
+### BUILD-10 lexical paraphrase investigation — 2026-11-23
+
+Reproduced the 85.7% baseline and compared English stemming in read-only PostgreSQL over synthetic inputs. It reached 90.5% on the original sample by recovering one inflection, but six unrelated notes pushed that match outside the return limit. No runtime change or AI call. The next step is a fresh held-out evaluation with distractors before deciding whether to trial a hybrid approach. See the [investigation](docs/03-technical/lexical-paraphrase-investigation.md).
