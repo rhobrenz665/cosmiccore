@@ -570,3 +570,7 @@ Restarted the loopback review server on port 3001 with isolated paired Auth and 
 ### Safari appearance persistence checkpoint — 2026-11-23
 
 Observed the signed-in account in Cosmic and verified Cosmic was still selected after reloading Settings. The previous checkpoint observed Minimal Light. Restoring Minimal and checking its stored Light choice, plus closing the mobile More sheet with the keyboard and checking focus return, remain open.
+
+### BUILD-10 source preparation checkpoint — 2026-11-23
+
+Implemented and tested the first local retrieval slice. Source preparation creates deterministic revision-format hashes and bounded heading-aware Markdown chunks with original offsets, Unicode boundaries, fenced-code handling, and explicit byte and chunk limits. Four targeted tests, typecheck and lint passed. The next slice is durable version activation and owner-scoped lexical retrieval. BUILD-09 live deletion acceptance remains open.
