@@ -596,3 +596,11 @@ Created a labeled synthetic reference in the isolated signed-in Safari workspace
 ### BUILD-10 lexical paraphrase investigation — 2026-11-23
 
 Reproduced the 85.7% baseline and compared English stemming in read-only PostgreSQL over synthetic inputs. It reached 90.5% on the original sample by recovering one inflection, but six unrelated notes pushed that match outside the return limit. No runtime change or AI call. The next step is a fresh held-out evaluation with distractors before deciding whether to trial a hybrid approach. See the [investigation](docs/03-technical/lexical-paraphrase-investigation.md).
+
+### Note-first AI source preview — 2026-11-23
+
+Owner chose to start with questions directly in a note. Implemented a local Ask about this note panel that previews a bounded excerpt from the open note's authorized saved revision. The panel waits for autosave and rejects stale, trashed, missing and foreign sources through the existing note read boundary. The question and result are ephemeral. No hosted model, library retrieval, index preparation or answer generation is used by the preview.
+
+The next smallest milestone is verifying the panel on a signed-in test note and connecting bounded provider-backed answers after the provider and privacy gates are met. Broader retrieval remains a separate enhancement.
+
+Signed-in Safari verified the panel on the existing isolated test note. A sample question displayed the open note as the source and returned its excerpt. Lint, typecheck and production build passed.

@@ -55,3 +55,7 @@ Confirmed local runtime: Ollama with a Qwen model of approximately 7B parameters
 ## Approved chat retention — 2026-11-10
 
 Conversation history remains until the user deletes it, subject to storage limits. Confirmed conversation deletion removes live access immediately without Trash; dependent content cleanup is bounded and must not be undone by late generation. Deleting a source blocks future retrieval/citation access, while existing generated answer text remains until its conversation is deleted. Account deletion overrides retention under its approved policy. Implementation details remain Proposed.
+
+## Note-first AI interaction
+
+Owner approved starting AI interaction inside the open note. The first experience uses only that note's saved text and identifies it as the source. The user can ask directly from the editor without preparing an index. Automatic retrieval across the library is a later enhancement. Hosted answers, privacy disclosure, usage limits and provider acceptance still require the BUILD-11 work.

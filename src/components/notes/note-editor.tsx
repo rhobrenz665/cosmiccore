@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
-import { SourceIndexStatus } from "@/components/retrieval/source-index-status";
+import { AskNotePanel } from "./ask-note-panel";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
 import { MAX_BODY_BYTES, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
@@ -30,8 +30,8 @@ function sameDraft(left: Draft, right: Draft) {
   return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialIndexedRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
-  initialIndexedRevision?: number | null; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
+export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
+  initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [acknowledgedDraft, setAcknowledgedDraft] = useState<Draft>(() => canonicalDraft(initialDraft));
@@ -292,8 +292,8 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     </div>
     </fieldset>
     <div hidden={focusMode}>
-      <SourceIndexStatus source={{ kind: "note", id: noteId }} revision={savedRevision}
-        initialIndexedRevision={initialIndexedRevision} disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
+      <AskNotePanel noteId={noteId} revision={savedRevision}
+        disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
     </div>
   </div>;
 }

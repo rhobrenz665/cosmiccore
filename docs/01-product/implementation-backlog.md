@@ -101,3 +101,7 @@ Automated backups/disaster recovery, local Ollama/Qwen connectivity, mock interv
 BUILD-08 merged in [PR #7](https://github.com/rhobrenz665/cosmiccore/pull/7). BUILD-09 is implemented locally and migrated on isolated `cosmiccore_dev`. Verify preference persistence, fresh Google confirmation with a disposable identity, and provider deletion through the cleanup worker against the paired Auth endpoint. Track scheduled maintenance and production capacity gates in [project status](../../PROJECT_STATUS.md).
 
 The next feature is BUILD-10 versioned source preparation and retrieval. Register future chat, retrieval, and provider artifacts with the account-deletion cleanup contract when their schemas land.
+
+### Note-first AI delivery adjustment
+
+The first chat interaction is **Ask about this note** in the editor. It reads the authorized saved revision directly, so its acceptance is independent of the broader lexical recall target. Start with a clearly labeled local source preview, then implement and verify a real answer through the approved provider boundary. Keep automatic library-wide retrieval as a follow-up proposal.
