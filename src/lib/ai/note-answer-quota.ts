@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
-import { globalQuotaUsage, quotaUsage } from "@/lib/db/schema";
-import type { DbTransaction } from "@/lib/db/transaction";
+import { globalQuotaUsage, quotaUsage } from "../db/schema.ts";
+import type { DbTransaction } from "../db/transaction-session.ts";
 
 const metric = "note_answers_count";
 
