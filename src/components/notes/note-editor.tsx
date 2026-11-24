@@ -30,7 +30,7 @@ function sameDraft(left: Draft, right: Draft) {
   return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
+export function NoteEditor({ aiEnabled, noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { aiEnabled: boolean; noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
   initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
@@ -292,7 +292,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     </div>
     </fieldset>
     <div hidden={focusMode}>
-      <AskNotePanel noteId={noteId} revision={savedRevision}
+      <AskNotePanel aiEnabled={aiEnabled} noteId={noteId} revision={savedRevision}
         disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
     </div>
   </div>;

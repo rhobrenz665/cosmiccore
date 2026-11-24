@@ -143,7 +143,7 @@ export const noteReferences = pgTable("note_references", {
 ]);
 
 const usageFields = () => ({
-  metric: text("metric", { enum: ["notes_count", "notes_bytes", "references_count", "references_bytes", "collections_count", "tags_count", "mutations_count"] }).notNull(),
+  metric: text("metric", { enum: ["notes_count", "notes_bytes", "references_count", "references_bytes", "collections_count", "tags_count", "mutations_count", "note_answers_count"] }).notNull(),
   // Lifetime storage/count counters use epoch; rate counters use a UTC window.
   windowStart: timestamp("window_start", { withTimezone: true }).notNull().default(sql`'1970-01-01T00:00:00Z'::timestamptz`),
   used: bigint("used", { mode: "number" }).notNull().default(0),
@@ -156,13 +156,13 @@ export const quotaUsage = pgTable("quota_usage", {
 }, (t) => [
   primaryKey({ columns: [t.ownerId, t.metric, t.windowStart] }),
   check("quota_usage_used_check", sql`${t.used} between 0 and 9007199254740991`),
-  check("quota_usage_metric_check", sql`${t.metric} in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count')`),
+  check("quota_usage_metric_check", sql`${t.metric} in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count', 'note_answers_count')`),
 ]);
 
 export const globalQuotaUsage = pgTable("global_quota_usage", usageFields(), (t) => [
   primaryKey({ columns: [t.metric, t.windowStart] }),
   check("global_quota_usage_used_check", sql`${t.used} between 0 and 9007199254740991`),
-  check("global_quota_usage_metric_check", sql`${t.metric} in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count')`),
+  check("global_quota_usage_metric_check", sql`${t.metric} in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count', 'note_answers_count')`),
 ]);
 
 export const mutationReceipts = pgTable("mutation_receipts", {
