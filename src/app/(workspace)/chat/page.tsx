@@ -39,7 +39,7 @@ export default async function Chat({ searchParams }: {
                 Open source {index + 1} ({source.kind})
               </Link> : "Source changed or unavailable."}
             </p>)}
-            {enabled && selected && !turn.answer && <AnswerForm conversationId={selected.id} turnId={turn.id} />}
+            {enabled && selected && !turn.answer && <AnswerForm conversationId={selected.id} turnId={turn.id} attemptStatus={turn.attemptStatus} />}
           </li>)}
         </ol>
         <form action={submitChatQuestion} className="grid gap-2">

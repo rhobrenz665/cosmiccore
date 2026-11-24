@@ -273,6 +273,9 @@ export const chatTurns = pgTable("chat_turns", {
   sourceKind: text("source_kind", { enum: ["note", "reference"] }),
   sourceId: uuid("source_id"),
   sourceRevision: bigint("source_revision", { mode: "number" }),
+  attemptId: uuid("attempt_id"),
+  attemptExpiresAt: timestamp("attempt_expires_at", { withTimezone: true }),
+  attemptStatus: text("attempt_status"),
   citations: jsonb("citations").$type<{ kind: "note" | "reference"; sourceId: string; revision: number }[]>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

@@ -1,6 +1,7 @@
 import "server-only";
 
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
 import { generateChatEvidence } from "@/lib/ai/chat-evidence";
 import { reserveNoteAnswer } from "@/lib/ai/note-answer-quota";
 import { retrieveSources } from "@/lib/retrieval/search-core";
@@ -41,6 +42,8 @@ export function loadChat(id?: string) {
       .where(and(eq(references.ownerId, ownerId), inArray(references.id, referenceIds))) : [];
     return { history, selected, turns: turns.map(turn => ({
       id: turn.id, question: turn.question, answer: turn.answer,
+      attemptStatus: turn.attemptStatus === "active" && turn.attemptExpiresAt &&
+        turn.attemptExpiresAt.getTime() <= Date.now() ? "interrupted" : turn.attemptStatus,
       sources: citationsFor(turn).map(source => ({
         kind: source.kind,
         href: (source.kind === "note" ? currentNotes : currentReferences)
@@ -101,7 +104,14 @@ export function answerChatQuestion(conversationId: string, turnId: string, strea
 }
 
 async function runAnswer(conversationId: string, turnId: string, key: string, stream?: { signal: AbortSignal; onProgress: () => void }) {
+  const attemptId = randomUUID();
   const prepare = await withChatOwner(async (tx, ownerId) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${"cosmiccore:chat:" + ownerId}, 0))`);
+    const [active] = await tx.select({ id: chatTurns.id }).from(chatTurns).where(and(
+      eq(chatTurns.ownerId, ownerId), eq(chatTurns.attemptStatus, "active"),
+      gt(chatTurns.attemptExpiresAt, sql`clock_timestamp()`),
+    )).limit(1);
+    if (active) return { status: "active" } as const;
     const [turn] = await tx.select().from(chatTurns).where(and(
       eq(chatTurns.id, turnId), eq(chatTurns.conversationId, conversationId), eq(chatTurns.ownerId, ownerId),
     ));
@@ -124,42 +134,68 @@ async function runAnswer(conversationId: string, turnId: string, key: string, st
     }
     if (!sources.length) return { status: "insufficient" } as const;
     if (!await reserveNoteAnswer(tx, ownerId)) return { status: "limited" } as const;
-    return { question: turn.question, sources };
+    const previous = await tx.select({ question: chatTurns.question }).from(chatTurns).where(and(
+      eq(chatTurns.ownerId, ownerId), eq(chatTurns.conversationId, conversationId),
+      lt(chatTurns.createdAt, turn.createdAt), sql`${chatTurns.answer} is not null`,
+    )).orderBy(desc(chatTurns.createdAt), desc(chatTurns.id)).limit(4);
+    await tx.update(chatTurns).set({
+      attemptId, attemptStatus: "active",
+      attemptExpiresAt: sql`clock_timestamp() + interval '55 seconds'`,
+    }).where(and(eq(chatTurns.id, turnId), eq(chatTurns.ownerId, ownerId)));
+    return { question: turn.question, sources,
+      previousQuestions: previous.reverse().map(item => Array.from(item.question).slice(0, 120).join("")) };
   });
 
   if ("status" in prepare) return prepare.status;
-  if (stream?.signal.aborted) return "canceled";
-  const { sources, question } = prepare;
-  const result = await generateChatEvidence(key, question, sources.map(source => source.passage), fetch, stream);
-  if (stream?.signal.aborted) return "canceled";
-  if (result.kind === "rate-limited") return "limited";
-  if (result.kind !== "answered") return result.kind;
-  const answer = result.answer;
-  const answerBytes = Buffer.byteLength(answer);
-  if (answerBytes > 16384 || answer.includes("\0")) return "unavailable";
+  let outcome = "unavailable";
+  try {
+    outcome = await finishAnswer();
+    return outcome;
+  } finally {
+    await withChatOwner(async (tx, ownerId) => {
+      await tx.update(chatTurns).set({ attemptStatus: outcome, attemptExpiresAt: null }).where(and(
+        eq(chatTurns.id, turnId), eq(chatTurns.ownerId, ownerId), eq(chatTurns.attemptId, attemptId),
+        eq(chatTurns.attemptStatus, "active"),
+      ));
+    });
+  }
 
-  return withChatOwner(async (tx, ownerId) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${"cosmiccore:chat:" + ownerId}, 0))`);
-    for (const source of sources) {
-      const table = source.kind === "note" ? notes : references;
-      const [current] = await tx.select({ revision: table.revision }).from(table).where(and(
-      eq(table.id, source.sourceId), eq(table.ownerId, ownerId), source.kind === "note" ? isNull(notes.deletedAt) : undefined,
-    )).for("share");
-      if (current?.revision !== source.revision) return "changed";
-    }
-    const [{ bytes }] = (await tx.execute<{ bytes: number }>(sql`
-      select coalesce(sum(octet_length(question) + coalesce(octet_length(answer), 0)), 0)::int as bytes
-      from ${chatTurns} where owner_id = ${ownerId}
-    `)).rows;
-    if (bytes + answerBytes > 2 * 1024 * 1024) return "limited";
+  async function finishAnswer() {
+    if (!("sources" in prepare) || !prepare.sources) return "unavailable";
     if (stream?.signal.aborted) return "canceled";
-    const [saved] = await tx.update(chatTurns).set({
-      answer, citations: result.indices.map(index => {
-        const { kind, sourceId, revision } = sources[index];
-        return { kind, sourceId, revision };
-      }),
-    }).where(and(eq(chatTurns.id, turnId), eq(chatTurns.conversationId, conversationId),
-      eq(chatTurns.ownerId, ownerId), isNull(chatTurns.answer))).returning({ id: chatTurns.id });
-    return saved ? "saved" : "unavailable";
-  });
+    const { sources, question, previousQuestions } = prepare;
+    const result = await generateChatEvidence(key, question, sources.map(source => source.passage), fetch, stream, previousQuestions);
+    if (stream?.signal.aborted) return "canceled";
+    if (result.kind === "rate-limited") return "limited";
+    if (result.kind !== "answered") return result.kind;
+    const answer = result.answer;
+    const answerBytes = Buffer.byteLength(answer);
+    if (answerBytes > 16384 || answer.includes("\0")) return "unavailable";
+
+    return withChatOwner(async (tx, ownerId) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${"cosmiccore:chat:" + ownerId}, 0))`);
+      for (const source of sources) {
+        const table = source.kind === "note" ? notes : references;
+        const [current] = await tx.select({ revision: table.revision }).from(table).where(and(
+        eq(table.id, source.sourceId), eq(table.ownerId, ownerId), source.kind === "note" ? isNull(notes.deletedAt) : undefined,
+      )).for("share");
+        if (current?.revision !== source.revision) return "changed";
+      }
+      const [{ bytes }] = (await tx.execute<{ bytes: number }>(sql`
+        select coalesce(sum(octet_length(question) + coalesce(octet_length(answer), 0)), 0)::int as bytes
+        from ${chatTurns} where owner_id = ${ownerId}
+      `)).rows;
+      if (bytes + answerBytes > 2 * 1024 * 1024) return "limited";
+      if (stream?.signal.aborted) return "canceled";
+      const [saved] = await tx.update(chatTurns).set({
+        answer, attemptStatus: "saved", attemptExpiresAt: null, citations: result.indices.map(index => {
+          const { kind, sourceId, revision } = sources[index];
+          return { kind, sourceId, revision };
+        }),
+      }).where(and(eq(chatTurns.id, turnId), eq(chatTurns.conversationId, conversationId),
+        eq(chatTurns.ownerId, ownerId), eq(chatTurns.attemptId, attemptId),
+        gt(chatTurns.attemptExpiresAt, sql`clock_timestamp()`), isNull(chatTurns.answer))).returning({ id: chatTurns.id });
+      return saved ? "saved" : "unavailable";
+    });
+  }
 }

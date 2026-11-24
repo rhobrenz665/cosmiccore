@@ -14,9 +14,11 @@ const messages: Record<string, string> = {
   canceled: "Stopped waiting for the answer.",
   unavailable: "The answer could not be generated. Try again later.",
   saved: "Answer saved.",
+  active: "A generation is already running. Try again after it finishes.",
+  interrupted: "The previous generation was interrupted. You can try again.",
 };
 
-export function AnswerForm({ conversationId, turnId }: { conversationId: string; turnId: string }) {
+export function AnswerForm({ conversationId, turnId, attemptStatus }: { conversationId: string; turnId: string; attemptStatus: string | null }) {
   const router = useRouter();
   const attempt = useRef<AbortController | null>(null);
   const [pending, setPending] = useState(false);
@@ -69,7 +71,7 @@ export function AnswerForm({ conversationId, turnId }: { conversationId: string;
   }}>
     <label className="flex items-start gap-2 text-sm">
       <input type="checkbox" name="consent" required disabled={pending} />
-      Send this question and up to three matching passages to Groq.
+      Send this question, up to four earlier questions, and up to three matching passages to Groq.
     </label>
     <div className="flex flex-wrap gap-2">
       <Button type="submit" disabled={pending}>Get AI answer</Button>
@@ -77,6 +79,6 @@ export function AnswerForm({ conversationId, turnId }: { conversationId: string;
         Stop generation
       </Button>}
     </div>
-    <p role="status">{messages[status]}</p>
+    <p role="status">{messages[status || attemptStatus || ""]}</p>
   </form>;
 }
