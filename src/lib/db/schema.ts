@@ -270,6 +270,9 @@ export const chatTurns = pgTable("chat_turns", {
   submissionId: uuid("submission_id").notNull(),
   question: text("question").notNull(),
   answer: text("answer"),
+  sourceKind: text("source_kind", { enum: ["note", "reference"] }),
+  sourceId: uuid("source_id"),
+  sourceRevision: bigint("source_revision", { mode: "number" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   foreignKey({

@@ -1,7 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { deleteChat, saveQuestion } from "@/lib/chat/history";
+import { redirect, unstable_rethrow } from "next/navigation";
+import { answerChatQuestion, deleteChat, saveQuestion } from "@/lib/chat/history";
 
 export async function submitChatQuestion(form: FormData) {
   const id = String(form.get("conversationId") ?? "");
@@ -14,4 +14,17 @@ export async function submitChatQuestion(form: FormData) {
 export async function removeChat(form: FormData) {
   await deleteChat(String(form.get("conversationId") ?? ""));
   redirect("/chat");
+}
+
+
+export async function requestChatAnswer(form: FormData) {
+  const id = String(form.get("conversationId") ?? "");
+  const turn = String(form.get("turnId") ?? "");
+  let status = "unavailable";
+  try {
+    if (form.get("groqConsent") === "on") status = await answerChatQuestion(id, turn) ?? "unavailable";
+  } catch (error) {
+    unstable_rethrow(error);
+  }
+  redirect(`/chat?${new URLSearchParams({ id, status })}`);
 }
