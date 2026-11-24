@@ -92,15 +92,15 @@ export function deleteChat(id: string) {
   });
 }
 
-export function answerChatQuestion(conversationId: string, turnId: string) {
+export function answerChatQuestion(conversationId: string, turnId: string, stream?: { signal: AbortSignal; onProgress: () => void }) {
   const key = process.env.GROQ_API_KEY?.trim();
   if (!key || process.env.COSMICCORE_CHAT_ANSWERS_ENABLED !== "true" ||
       !uuid.test(conversationId) || !uuid.test(turnId)) return Promise.resolve("unavailable");
 
-  return runAnswer(conversationId, turnId, key);
+  return runAnswer(conversationId, turnId, key, stream);
 }
 
-async function runAnswer(conversationId: string, turnId: string, key: string) {
+async function runAnswer(conversationId: string, turnId: string, key: string, stream?: { signal: AbortSignal; onProgress: () => void }) {
   const prepare = await withChatOwner(async (tx, ownerId) => {
     const [turn] = await tx.select().from(chatTurns).where(and(
       eq(chatTurns.id, turnId), eq(chatTurns.conversationId, conversationId), eq(chatTurns.ownerId, ownerId),
@@ -128,8 +128,10 @@ async function runAnswer(conversationId: string, turnId: string, key: string) {
   });
 
   if ("status" in prepare) return prepare.status;
+  if (stream?.signal.aborted) return "canceled";
   const { sources, question } = prepare;
-  const result = await generateChatEvidence(key, question, sources.map(source => source.passage));
+  const result = await generateChatEvidence(key, question, sources.map(source => source.passage), fetch, stream);
+  if (stream?.signal.aborted) return "canceled";
   if (result.kind === "rate-limited") return "limited";
   if (result.kind !== "answered") return result.kind;
   const answer = result.answer;
@@ -150,6 +152,7 @@ async function runAnswer(conversationId: string, turnId: string, key: string) {
       from ${chatTurns} where owner_id = ${ownerId}
     `)).rows;
     if (bytes + answerBytes > 2 * 1024 * 1024) return "limited";
+    if (stream?.signal.aborted) return "canceled";
     const [saved] = await tx.update(chatTurns).set({
       answer, citations: result.indices.map(index => {
         const { kind, sourceId, revision } = sources[index];

@@ -20,3 +20,30 @@ test("rejects an invented citation even if another citation is valid", async () 
     requestWith([{ index: 0, quote: "April 4" }, { index: 1, quote: "April 4" }]));
   assert.deepEqual(result, { kind: "insufficient" });
 });
+
+test("passes cancellation to the upstream stream", async () => {
+  const controller = new AbortController();
+  const request: typeof fetch = async (_url, options) => {
+    assert.ok(options?.signal);
+    const signal = options.signal;
+    return new Response(new ReadableStream({
+      start(stream) {
+        signal.addEventListener("abort", () => stream.error(signal.reason), { once: true });
+        controller.abort();
+      },
+    }));
+  };
+  assert.deepEqual(await generateChatEvidence("fixture", "When is the launch?", passages, request,
+    { signal: controller.signal, onProgress() { assert.fail("Canceled stream emitted progress"); } }),
+  { kind: "unavailable" });
+});
+
+test("does not accept a streamed answer when the provider disconnects before completion", async () => {
+  const request: typeof fetch = async () => new Response(`data: ${JSON.stringify({
+    choices: [{ delta: { content: JSON.stringify({
+      answer: "April 4.", citations: [{ index: 0, quote: "April 4" }],
+    }) } }],
+  })}\n\n`);
+  assert.deepEqual(await generateChatEvidence("fixture", "When is the launch?", passages, request,
+    { signal: new AbortController().signal, onProgress() {} }), { kind: "unavailable" });
+});
