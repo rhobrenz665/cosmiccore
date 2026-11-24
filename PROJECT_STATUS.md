@@ -608,3 +608,5 @@ Signed-in Safari verified the panel on the existing isolated test note. A sample
 ### Question-aware note search — 2026-11-24
 
 Ask about this note selects a passage from the authorized saved revision using words in the question and reports when it finds no match. Focused tests cover different questions on the same note and a match late in Unicode text. Knowledge Base search and indexed cross-library retrieval have separate entry points, documented in the [search architecture](docs/03-technical/rag-architecture.md). The next milestone is signed-in verification of both match and no-match behavior. Hosted answers remain gated on provider privacy and usage checks.
+
+Signed-in Safari verified matching and no-match results in the isolated workspace. With a temporary edit to the existing test note, Find passage was disabled during autosave and returned a newly saved passage beyond the first 600 characters after saving. The original test note text was restored and saved. Next milestone is verifying hosted provider privacy and usage limits before enabling generated answers.
