@@ -622,3 +622,7 @@ Live synthetic verification initially caught inconsistent weather refusal and an
 ### Note AI Safari end-to-end check — 2026-11-24
 
 Restarted the isolated app with note answers enabled after applying migration 0005. Signed-in Safari opt-in sent the synthetic question “Where are the invoices?” with the saved excerpt “The invoices are in the blue folder.” Groq returned “In the blue folder.” and the editor displayed the source excerpt. Restored the original test note and confirmed it saved. API key remains local in ignored `.env.local`. The example configuration defaults the AI feature on for a configured deployment, while runtime still requires a key.
+
+### BUILD-11 chat history foundation
+
+Started from merged main on `codex/build-11-hosted-chat`. Migration 0006 adds private conversations and turns, constrains each turn to a conversation belonging to the same account, and makes submission IDs unique within a conversation. The account cleanup worker removes chat history during live app data removal. Typecheck and lint passed. The migration is generated and awaits isolated database acceptance. The next slice is authenticated history and submission handling, followed by bounded retrieval, citations, and generation.

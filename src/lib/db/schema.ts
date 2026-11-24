@@ -251,3 +251,34 @@ export const retrievalChunks = pgTable("retrieval_chunks", {
   foreignKey({ name: "retrieval_chunks_version_fk", columns: [t.ownerId, t.versionId], foreignColumns: [retrievalVersions.ownerId, retrievalVersions.id] }).onDelete("cascade"),
   check("retrieval_chunks_bounds_check", sql`${t.ordinal} between 0 and 511 and ${t.start} >= 0 and ${t.end} >= ${t.start} and ${t.end} - ${t.start} <= 1500`),
 ]);
+
+export const chatConversations = pgTable("chat_conversations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: uuid("owner_id").notNull().references(() => appUsers.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("chat_conversations_owner_id_key").on(t.ownerId, t.id),
+  index("chat_conversations_owner_history_idx").on(t.ownerId, t.updatedAt, t.id),
+  check("chat_conversations_title_length", sql`char_length(${t.title}) between 1 and 120`),
+]);
+
+export const chatTurns = pgTable("chat_turns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: uuid("owner_id").notNull(),
+  conversationId: uuid("conversation_id").notNull(),
+  submissionId: uuid("submission_id").notNull(),
+  question: text("question").notNull(),
+  answer: text("answer"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  foreignKey({
+    name: "chat_turns_owner_conversation_fk",
+    columns: [t.ownerId, t.conversationId],
+    foreignColumns: [chatConversations.ownerId, chatConversations.id],
+  }).onDelete("cascade"),
+  unique("chat_turns_submission_key").on(t.ownerId, t.conversationId, t.submissionId),
+  index("chat_turns_history_idx").on(t.ownerId, t.conversationId, t.createdAt, t.id),
+  check("chat_turns_question_size", sql`octet_length(${t.question}) between 1 and 8192`),
+  check("chat_turns_answer_size", sql`octet_length(${t.answer}) between 1 and 16384`),
+]);
