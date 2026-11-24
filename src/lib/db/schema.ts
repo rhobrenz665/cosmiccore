@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint, check, foreignKey, index, integer, pgTable, primaryKey,
+  bigint, check, foreignKey, index, integer, jsonb, pgTable, primaryKey,
   text, timestamp, unique, uniqueIndex, uuid,
 } from "drizzle-orm/pg-core";
 
@@ -273,6 +273,7 @@ export const chatTurns = pgTable("chat_turns", {
   sourceKind: text("source_kind", { enum: ["note", "reference"] }),
   sourceId: uuid("source_id"),
   sourceRevision: bigint("source_revision", { mode: "number" }),
+  citations: jsonb("citations").$type<{ kind: "note" | "reference"; sourceId: string; revision: number }[]>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   foreignKey({

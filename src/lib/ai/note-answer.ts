@@ -1,5 +1,5 @@
-const endpoint = "https://api.groq.com/openai/v1/chat/completions";
-const model = "openai/gpt-oss-20b";
+export const groqChatEndpoint = "https://api.groq.com/openai/v1/chat/completions";
+export const groqChatModel = "openai/gpt-oss-20b";
 
 export type NoteAnswerResult =
   | { kind: "answered"; answer: string }
@@ -22,14 +22,14 @@ export async function generateNoteAnswer(
   if (!apiKey.trim()) return { kind: "unavailable" };
 
   try {
-    const response = await request(endpoint, {
+    const response = await request(groqChatEndpoint, {
       method: "POST",
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(15_000),
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
+        model: groqChatModel,
         reasoning_effort: "low",
         max_completion_tokens: 1536,
         response_format: { type: "json_object" },

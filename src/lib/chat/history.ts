@@ -1,7 +1,7 @@
 import "server-only";
 
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import { generateNoteAnswer } from "@/lib/ai/note-answer";
+import { generateChatEvidence } from "@/lib/ai/chat-evidence";
 import { reserveNoteAnswer } from "@/lib/ai/note-answer-quota";
 import { retrieveSources } from "@/lib/retrieval/search-core";
 import { selectNotePassage } from "@/lib/retrieval/note-passage";
@@ -29,17 +29,24 @@ export function loadChat(id?: string) {
     const turns = selected ? await tx.select().from(chatTurns).where(and(
       eq(chatTurns.ownerId, ownerId), eq(chatTurns.conversationId, selected.id),
     )).orderBy(asc(chatTurns.createdAt), asc(chatTurns.id)).limit(100) : [];
-    const noteIds = turns.flatMap(turn => turn.sourceKind === "note" && turn.sourceId ? [turn.sourceId] : []);
-    const referenceIds = turns.flatMap(turn => turn.sourceKind === "reference" && turn.sourceId ? [turn.sourceId] : []);
+    const citationsFor = (turn: typeof chatTurns.$inferSelect) => turn.citations ??
+      (turn.sourceKind && turn.sourceId && turn.sourceRevision !== null
+        ? [{ kind: turn.sourceKind, sourceId: turn.sourceId, revision: turn.sourceRevision }] : []);
+    const citations = turns.flatMap(citationsFor);
+    const noteIds = citations.filter(source => source.kind === "note").map(source => source.sourceId);
+    const referenceIds = citations.filter(source => source.kind === "reference").map(source => source.sourceId);
     const currentNotes = noteIds.length ? await tx.select({ id: notes.id, revision: notes.revision }).from(notes)
       .where(and(eq(notes.ownerId, ownerId), isNull(notes.deletedAt), inArray(notes.id, noteIds))) : [];
     const currentReferences = referenceIds.length ? await tx.select({ id: references.id, revision: references.revision }).from(references)
       .where(and(eq(references.ownerId, ownerId), inArray(references.id, referenceIds))) : [];
     return { history, selected, turns: turns.map(turn => ({
-      id: turn.id, question: turn.question, answer: turn.answer, sourceKind: turn.sourceKind,
-      sourceHref: turn.sourceId && (turn.sourceKind === "note" ? currentNotes : currentReferences)
-        .some(source => source.id === turn.sourceId && source.revision === turn.sourceRevision)
-        ? `/${turn.sourceKind === "note" ? "notes" : "references"}/${turn.sourceId}` : null,
+      id: turn.id, question: turn.question, answer: turn.answer,
+      sources: citationsFor(turn).map(source => ({
+        kind: source.kind,
+        href: (source.kind === "note" ? currentNotes : currentReferences)
+          .some(current => current.id === source.sourceId && current.revision === source.revision)
+          ? `/${source.kind === "note" ? "notes" : "references"}/${source.sourceId}` : null,
+      })),
     })) };
   });
 }
@@ -102,24 +109,27 @@ async function runAnswer(conversationId: string, turnId: string, key: string) {
     if (turn.answer) return { status: "saved" } as const;
     if (turn.question.length > 500) return { status: "long" } as const;
     const matches = await retrieveSources(tx, ownerId, turn.question);
-    let source;
-    let passage;
+    const sources = [];
+    const seen = new Set<string>();
     for (const match of matches) {
-      const excerpt = selectNotePassage([match.title, match.text].join("\n"), turn.question);
-      if (excerpt) {
-        source = match;
-        passage = excerpt;
-        break;
-      }
+      if (seen.has(match.sourceId)) continue;
+      const excerpt = selectNotePassage(match.text, turn.question);
+      if (!excerpt) continue;
+      seen.add(match.sourceId);
+      sources.push({
+        kind: match.kind, sourceId: match.sourceId, revision: match.revision,
+        passage: Array.from(excerpt).slice(0, 400).join(""),
+      });
+      if (sources.length === 3) break;
     }
-    if (!source || !passage) return { status: "insufficient" } as const;
+    if (!sources.length) return { status: "insufficient" } as const;
     if (!await reserveNoteAnswer(tx, ownerId)) return { status: "limited" } as const;
-    return { question: turn.question, source, passage };
+    return { question: turn.question, sources };
   });
 
   if ("status" in prepare) return prepare.status;
-  const { source, question, passage } = prepare;
-  const result = await generateNoteAnswer(key, { question, passage });
+  const { sources, question } = prepare;
+  const result = await generateChatEvidence(key, question, sources.map(source => source.passage));
   if (result.kind === "rate-limited") return "limited";
   if (result.kind !== "answered") return result.kind;
   const answer = result.answer;
@@ -128,18 +138,23 @@ async function runAnswer(conversationId: string, turnId: string, key: string) {
 
   return withChatOwner(async (tx, ownerId) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${"cosmiccore:chat:" + ownerId}, 0))`);
-    const table = source.kind === "note" ? notes : references;
-    const [current] = await tx.select({ revision: table.revision }).from(table).where(and(
+    for (const source of sources) {
+      const table = source.kind === "note" ? notes : references;
+      const [current] = await tx.select({ revision: table.revision }).from(table).where(and(
       eq(table.id, source.sourceId), eq(table.ownerId, ownerId), source.kind === "note" ? isNull(notes.deletedAt) : undefined,
     )).for("share");
-    if (current?.revision !== source.revision) return "changed";
+      if (current?.revision !== source.revision) return "changed";
+    }
     const [{ bytes }] = (await tx.execute<{ bytes: number }>(sql`
       select coalesce(sum(octet_length(question) + coalesce(octet_length(answer), 0)), 0)::int as bytes
       from ${chatTurns} where owner_id = ${ownerId}
     `)).rows;
     if (bytes + answerBytes > 2 * 1024 * 1024) return "limited";
     const [saved] = await tx.update(chatTurns).set({
-      answer, sourceKind: source.kind, sourceId: source.sourceId, sourceRevision: source.revision,
+      answer, citations: result.indices.map(index => {
+        const { kind, sourceId, revision } = sources[index];
+        return { kind, sourceId, revision };
+      }),
     }).where(and(eq(chatTurns.id, turnId), eq(chatTurns.conversationId, conversationId),
       eq(chatTurns.ownerId, ownerId), isNull(chatTurns.answer))).returning({ id: chatTurns.id });
     return saved ? "saved" : "unavailable";

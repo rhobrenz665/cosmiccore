@@ -57,6 +57,13 @@
       "when": 1795508003635,
       "tag": "0007_chat_answer_sources",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795510442997,
+      "tag": "0008_chat_citations",
+      "breakpoints": true
     }
   ]
 }

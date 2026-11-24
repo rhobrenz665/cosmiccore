@@ -42,15 +42,17 @@ export default async function Chat({ searchParams }: {
           {turns.map(turn => <li key={turn.id} className="whitespace-pre-wrap break-words">
             <p>{turn.question}</p>
             {turn.answer && <p>{turn.answer}</p>}
-            {turn.sourceHref ? <Link className="underline" href={turn.sourceHref}>
-              Open source {turn.sourceKind}
-            </Link> : turn.sourceKind && <p>Source changed or unavailable.</p>}
+            {turn.sources.map((source, index) => <p key={index}>
+              {source.href ? <Link className="underline" href={source.href}>
+                Open source {index + 1} ({source.kind})
+              </Link> : "Source changed or unavailable."}
+            </p>)}
             {enabled && selected && !turn.answer && <form action={requestChatAnswer} className="grid gap-2">
               <input type="hidden" name="conversationId" value={selected.id} />
               <input type="hidden" name="turnId" value={turn.id} />
               <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" name="groqConsent" required />
-                Send this question and a matching passage to Groq.
+                Send this question and up to three matching passages to Groq.
               </label>
               <Button type="submit" className="justify-self-start">Get AI answer</Button>
             </form>}

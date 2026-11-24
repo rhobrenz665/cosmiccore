@@ -1,0 +1,1 @@
+ALTER TABLE "chat_turns" ADD COLUMN "citations" jsonb;
