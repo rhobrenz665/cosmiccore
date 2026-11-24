@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-21 | Phase: BUILD-08 implemented locally
+Status: In progress | Updated: 2026-11-21 | Phase: BUILD-09 migrated to isolated development
 
-Latest checkpoint: BUILD-08 is implemented on `codex/build-08-markdown-transfer`, based on `origin/main` after the BUILD-07 merge. The rate-limit migration is applied only to the isolated development database. The signed-in Safari round trip and synthetic two-account and concurrency checks passed. A second Google browser session and target-host performance remain unverified. See the [implementation backlog](docs/01-product/implementation-backlog.md).
+Latest checkpoint: BUILD-09 is on `codex/build-09-settings-account`, based on `origin/main` after the BUILD-08 merge. Settings, the deletion workflow and its operator worker are implemented. The migration is applied on isolated `cosmiccore_dev`. Account deletion remains disabled pending signed-in and provider acceptance. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -494,3 +494,131 @@ Added and started `npm run dev:isolated` as the repeatable HTTPS launch command 
 ## BUILD-08 handler acceptance with synthetic accounts
 
 Ran the actual import and export route handlers against pinned `cosmiccore_dev` with a test substitute at the Google identity boundary. Repeating an identical import with the same mutation ID returned the original note and kept one row. Reusing the ID with changed bytes returned 400. The other account received 404 for the individual export and an empty ZIP for its own bulk export. Four overlapping bulk requests at a test cap of two returned two successes and two 429s. Removed both synthetic accounts, their notes and counters, and reconciled their global quota deltas. The earlier Safari round trip covers real Google sign-in for one account. A second Google session and representative target-host performance remain unverified.
+
+## BUILD-09 implementation and verification — 2026-11-21
+
+Created `codex/build-09-settings-account` from current `main` after BUILD-08 merged. Settings shows a read-only Google profile, revision-checked account appearance controls shared with the header, Markdown transfer and Trash actions, AI availability, and sign-out with an unsaved-note prompt. Generated the preferences and account-deletion migration. Deletion uses a short-lived account-bound intent, a new verified Google session and typed confirmation, followed by an atomic access block and one cleanup job. An operator command processes quota-aware cleanup, verifies the configured Neon Auth target, retries provider errors, and expires completed deny records after seven days. The isolated launcher explicitly disables deletion because its Auth and app database environments are split.
+
+Typecheck, lint, all nine existing tests, and production build passed. A rollback-only check using the generated migration and real deletion code on pinned `cosmiccore_dev` verified same-session, stale-session, wrong-token and foreign-account rejection, confirmation replay, access blocking, simulated provider outage and retry, app content removal, and completed-record expiry. Confirmed rollback removed the test schema and fixtures. No provider account was deleted and no migration was permanently applied.
+
+Smallest next milestone: apply the reviewed migration to a development environment, verify signed-in preference persistence, and complete the Google confirmation and provider deletion run with a disposable identity on a paired database/Auth branch. Confirm scheduler execution before enabling deletion. Concurrent save/block, keyboard/mobile UI and target-host acceptance remain open.
+
+## BUILD-09 isolated migration and Auth pairing — 2026-11-21
+
+Applied the fourth Drizzle migration to pinned `cosmiccore_dev` and independently verified the deletion tables and paired Neon Auth schema. Added the explicit `--paired-auth` launcher option and verified that the local Google sign-in request returned the paired Auth initiation URL. Safari automation timed out before signed-in UI acceptance. The cleanup worker now checks that the managed user row is absent after either a successful API response or a replay returning 404. Typecheck, lint, all nine existing tests and the production build passed.
+
+Smallest next milestone: use a disposable Google account on the paired endpoint to check signed-in preference persistence and fresh confirmation. The worker management credential and cleanup scheduler are still missing from the test setup. Verify the live provider deletion and scheduled execution before enabling deletion. No production migration, account deletion, commit or push occurred.
+
+## Cosmic brand wireframe refresh — 2026-11-22
+
+Added a [standalone interactive wireframe](docs/05-design/wireframes/cosmiccore-brand-preview.html) based on the owner's Nebula brand reference. It shows the revised mark, Cosmic and Minimal treatments, light and dark, desktop and mobile layouts, and illustrative scenarios. The refreshed design is Proposed and awaits owner review. BUILD-09 implementation and acceptance status are unchanged.
+
+### Cosmic planet horizon preview — 2026-11-22
+
+Integrated the generated Nebula-inspired illustration into the Cosmic Dashboard and sign-in wireframes. Rendered the Cosmic desktop Dashboard, mobile sign-in and Minimal desktop Dashboard in Chrome. Next design milestone is owner review of the placement and responsive crop before any production UI implementation.
+
+### CosmicCore 2.0 UI audit — 2026-11-22
+
+Installed UI/UX Pro Max outside the project and ran its design-system, shadcn and UX searches. Recorded source and wireframe findings and a [proposed redesign and acceptance plan](docs/05-design/design-system.md#cosmiccore-20-audit-and-redesign-proposal--2026-11-22). The next design milestone is review of the shared shell, Dashboard and sign-in proposal across both appearances before implementation. BUILD-09 signed-in acceptance remains open.
+
+### CosmicCore 2.0 prototype refinement — 2026-11-22
+
+Updated the [interactive design preview](docs/05-design/wireframes/cosmiccore-brand-preview.html) for shell, Dashboard, sign-in and mobile review, with References and Chat availability screens. The next design milestone is owner review of this prototype before any application changes.
+
+### CosmicCore 2.0 appearance implementation — 2026-11-22
+
+Implemented the approved single Cosmic palette and Minimal Light, Dark and System modes with the existing saved preferences. Updated brand and artwork, shell, Dashboard hierarchy, sign-in, Knowledge filter controls, note toolbar and Chat availability. The next milestone is signed-in UI acceptance followed by planning the next Knowledge and editor refinements. BUILD-09 account deletion acceptance remains open.
+
+Verification passed for typecheck, lint, the nine existing tests, and the production build. Signed-out Chrome verified Cosmic, Minimal Light, Minimal Dark, and Minimal System on sign-in at 375 px or 1440 px. Only Cosmic requested the planet asset. Signed-in preference round trips, workspace keyboard flow and contrast measurement remain open.
+
+### UI enhancement workflow agreed — 2026-11-22
+
+Recorded the [three-skill workflow](docs/05-design/design-system.md#ui-enhancement-workflow). Next, gather signed-in UI evidence and prepare the design proposal, component mapping, and production-quality review for owner approval.
+
+### Appearance and Knowledge design review — 2026-11-22
+
+Prepared the [interactive review](docs/05-design/wireframes/cosmiccore-brand-preview.html) and [approval draft](docs/05-design/design-system.md#appearance-and-knowledge-approval-draft) using the installed three-skill workflow. Rendered desktop Cosmic Appearance and mobile-frame Minimal Knowledge in Chrome. Next milestone is owner design approval, then implementation and signed-in acceptance.
+
+### Cosmic reference alignment
+
+Refined the [Cosmic Dashboard preview](docs/05-design/wireframes/cosmiccore-brand-preview.html) using the supplied desktop and mobile references. Rendered both layouts in Chrome. Next milestone is owner review of the Cosmic Dashboard alongside Appearance and Knowledge before further app implementation.
+
+### Immersive Cosmic design review
+
+Refined the [Cosmic prototype](docs/05-design/wireframes/cosmiccore-brand-preview.html) with new orbit artwork, a distinct mobile crop and calmer working surfaces. Captured Chrome previews. The next milestone is owner review of the revised direction before further app implementation.
+
+### Immersive Cosmic implementation
+
+Implemented the approved orbit art, mobile crop, ink surfaces and violet active navigation. Fixed the signed-out image redirect by exempting only the artwork path from the auth proxy. Verified the JPEG returns 200 and the signed-out Dashboard still redirects. Typecheck, lint, nine existing tests, production build and signed-out Chrome theme checks passed. Next is signed-in desktop and mobile acceptance before the next UI improvement pass.
+
+### Immersive Cosmic narrow-screen acceptance
+
+Chrome contrast sampling with production CSS and a representative Dashboard fixture found the 320 px heading at 2.66:1 over the planet rim. Adjusted mobile hero spacing and the dark overlay. The final fixture passed without horizontal overflow at 320, 375, 800 and 1440 px. Minimum sampled contrast was 16.03:1 for the heading and 5.24:1 for the description across those widths. Actual sign-in showed a visible keyboard focus state at 320 and 1440 px. Production build, typecheck and lint passed.
+
+Signed-in workspace acceptance remains open. The paired launcher could not start a second Next.js development instance because this checkout already has a server on port 3000. Next milestone is to use a signed-in session on the paired development environment to verify Dashboard, Settings persistence, and mobile workspace focus.
+
+### Mobile workspace follow-up
+
+Applied the three-skill workflow to the existing mobile shell and More Sheet. More now communicates the active secondary destination, navigation icons are decorative, account feedback wraps below compact header controls, and the sheet can scroll with safe-area padding. Lint, production build, typecheck and diff whitespace checks passed.
+
+Started the reviewed production build at https://localhost:3001 on loopback with the isolated database and paired Auth. Verified Google sign-in initiation with no credentials. This temporary review server avoids the existing dev server on port 3000. Signed-in Dashboard, More Sheet focus return and appearance persistence still require a browser session.
+
+### Safari signed-in Dashboard checkpoint — 2026-11-23
+
+Restarted the loopback review server on port 3001 with isolated paired Auth and account deletion disabled. Safari opened the authenticated Dashboard and showed the workspace navigation, capture controls, and empty Notes and References sections. The session was in Minimal Light. The mobile More focus-return test and saved appearance round trip remain open. No application code changed during this checkpoint.
+
+### Safari appearance persistence checkpoint — 2026-11-23
+
+Observed the signed-in account in Cosmic and verified Cosmic was still selected after reloading Settings. The previous checkpoint observed Minimal Light. Restoring Minimal and checking its stored Light choice, plus closing the mobile More sheet with the keyboard and checking focus return, remain open.
+
+### BUILD-10 source preparation checkpoint — 2026-11-23
+
+Implemented and tested the first local retrieval slice. Source preparation creates deterministic revision-format hashes and bounded heading-aware Markdown chunks with original offsets, Unicode boundaries, fenced-code handling, and explicit byte and chunk limits. Four targeted tests, typecheck and lint passed. The next slice is durable version activation and owner-scoped lexical retrieval. BUILD-09 live deletion acceptance remains open.
+
+### BUILD-10 durable retrieval core — 2026-11-23
+
+Generated the retrieval storage migration and implemented transactional activation of one owned source version at a time, with bounded insert batches and PostgreSQL lexical ranking. The reader joins live source identity and revision, excludes Trash, and caps results at six and two per source. Ownership and cascading deletion are enforced in the schema. Authenticated server-only entry points derive the owner from the current session.
+
+The pinned isolated database passed a rollback-only integration check for foreign access, idempotent indexing, stale revisions, Trash and restore, reference deletion, and account blocking. The migration and fixtures rolled back together. Chunk tests, typecheck and lint passed. Next is indexing invocation/status on normal source screens, distinct retry/failure behavior, and retrieval quality evaluation before calling BUILD-10 complete. BUILD-09 live Auth deletion remains open, and BUILD-11 has not started.
+
+### BUILD-10 source indexing and lexical evaluation — 2026-11-23
+
+Wired Notes and References to authenticated indexing of saved revisions with ready, pending, and retry feedback. Note autosave advances the displayed revision. Ordinary edits and reads stay available if indexing fails. The isolated rollback check verified lifecycle and ownership plus 24 synthetic retrieval cases. Stopword handling and partial term matching improved natural-language questions from 0/6 to 6/6. Exact queries passed 12/12, paraphrases 0/3, and no-match queries 3/3. The 18/21 overall answerable result falls below the proposed 90% target. Next milestone is isolated signed-in source-panel verification and agreement on how to improve paraphrase recall. No migration committed to the database, provider call, or push occurred.
+
+### BUILD-10 Safari acceptance checkpoint — 2026-11-23
+
+Applied migration 0004 to isolated `cosmiccore_dev` and restarted the loopback review server with paired Auth. Signed-in Safari opened the existing test note. The source panel moved from awaiting indexing to indexing to indexed, and still showed indexed after reloading. Reference UI and retry behavior remain unverified in Safari. The 85.7% lexical recall result still falls short of the proposed 90% gate.
+
+### BUILD-10 Safari reference indexing checkpoint — 2026-11-23
+
+Created a labeled synthetic reference in the isolated signed-in Safari workspace and verified the saved version reached indexed status through the normal reference detail panel. The synthetic reference remains available for later checks. Safari failure and retry behavior remains open. BUILD-10 also remains below the proposed recall gate on the synthetic corpus. The current backlog calls for a separate accepted plan before adding embeddings.
+
+### BUILD-10 lexical paraphrase investigation — 2026-11-23
+
+Reproduced the 85.7% baseline and compared English stemming in read-only PostgreSQL over synthetic inputs. It reached 90.5% on the original sample by recovering one inflection, but six unrelated notes pushed that match outside the return limit. No runtime change or AI call. The next step is a fresh held-out evaluation with distractors before deciding whether to trial a hybrid approach. See the [investigation](docs/03-technical/lexical-paraphrase-investigation.md).
+
+### Note-first AI source preview — 2026-11-23
+
+Owner chose to start with questions directly in a note. Implemented a local Ask about this note panel that previews a bounded excerpt from the open note's authorized saved revision. The panel waits for autosave and rejects stale, trashed, missing and foreign sources through the existing note read boundary. The question and result are ephemeral. No hosted model, library retrieval, index preparation or answer generation is used by the preview.
+
+The next smallest milestone is verifying the panel on a signed-in test note and connecting bounded provider-backed answers after the provider and privacy gates are met. Broader retrieval remains a separate enhancement.
+
+Signed-in Safari verified the panel on the existing isolated test note. A sample question displayed the open note as the source and returned its excerpt. Lint, typecheck and production build passed.
+
+### Question-aware note search — 2026-11-24
+
+Ask about this note selects a passage from the authorized saved revision using words in the question and reports when it finds no match. Focused tests cover different questions on the same note and a match late in Unicode text. Knowledge Base search and indexed cross-library retrieval have separate entry points, documented in the [search architecture](docs/03-technical/rag-architecture.md). The next milestone is signed-in verification of both match and no-match behavior. Hosted answers remain gated on provider privacy and usage checks.
+
+Signed-in Safari verified matching and no-match results in the isolated workspace. With a temporary edit to the existing test note, Find passage was disabled during autosave and returned a newly saved passage beyond the first 600 characters after saving. The original test note text was restored and saved. Next milestone is verifying hosted provider privacy and usage limits before enabling generated answers.
+
+Implemented and locally tested the Groq transport for a single note answer. It accepts a bounded question and selected passage, applies a timeout and completion cap, and distinguishes insufficient evidence, provider limits, and unavailable or incomplete responses. The application flow still needs durable quota admission, user disclosure, and a revision recheck before showing an answer. Live testing remains pending verified account access, limits, and data controls.
+
+Verified the GroqCloud model limits in the signed-in console and enabled Inference APIs Zero Data Retention. The editor now supports an opt-in, single-note answer when explicitly enabled on the server. It reserves durable daily usage and checks source freshness before and after generation. Lint, typecheck, and four focused tests passed. Migration 0005, database quota acceptance, and a live synthetic answer with a project API key remain pending in the isolated environment.
+
+Tightened the note-answer instructions for misleading matches, instructions embedded in source text, and partially supported questions. Added a synthetic live check at `scripts/check-note-answer-live.mts`. Four focused tests, lint, production build, and typecheck passed. The live check stopped before making a request because `GROQ_API_KEY` is absent. Release approval for this change is pending live results.
+
+Live synthetic verification initially caught inconsistent weather refusal and an omitted due-date qualification. The answer parser now requires an exact source quote and displays missing details separately. Live Groq passed the instruction, arithmetic, and partial-answer cases, and the current weather fixture was declined locally. Migration 0005 and the quota reservation, cooldown, and daily caps passed in a rolled-back transaction on isolated development. Applying migration 0005 and exercising the enabled editor are follow-up steps for the pilot environment.
+
+### Note AI Safari end-to-end check — 2026-11-24
+
+Restarted the isolated app with note answers enabled after applying migration 0005. Signed-in Safari opt-in sent the synthetic question “Where are the invoices?” with the saved excerpt “The invoices are in the blue folder.” Groq returned “In the blue folder.” and the editor displayed the source excerpt. Restored the original test note and confirmed it saved. API key remains local in ignored `.env.local`. The example configuration defaults the AI feature on for a configured deployment, while runtime still requires a key.

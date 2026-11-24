@@ -50,18 +50,16 @@ export default async function Dashboard() {
     ? { ...note, href: `/notes/${note.id}` } : reference && { ...reference, href: `/references/${reference.id}` };
 
   return <div className="page-wrap space-y-6">
-    <header className="page-heading">
-      <h1>Dashboard</h1>
-      <p>Capture a new idea or pick up your recent work.</p>
+    <header className="page-heading dashboard-heading">
+      <h1>Your knowledge workspace</h1>
+      <p>Capture an idea or pick up where you left off.</p>
+      <div className="dashboard-actions" aria-label="Quick actions">
+        <CreateNoteButton label="New note" />
+        {references ? <ReferenceCaptureForm collections={references.collections} tags={references.tags} />
+          : <Link className="secondary-link" href="/references">Open References</Link>}
+      </div>
     </header>
-    <div className="flex flex-wrap items-start gap-3" aria-label="Quick actions">
-      <CreateNoteButton label="New note" />
-      <Link className="secondary-link" href="/notes/import">Import Markdown</Link>
-      {references ? <ReferenceCaptureForm collections={references.collections} tags={references.tags} />
-        : <Link className="secondary-link" href="/references">Open References</Link>}
-      <Link className="secondary-link" href="/knowledge">Search Knowledge</Link>
-    </div>
-    {resume && <section aria-labelledby="resume-work" className="space-y-2 rounded-xl border border-border bg-card p-4">
+    {resume && <section aria-labelledby="resume-work" className="dashboard-resume rounded-xl border border-border bg-card p-4">
       <h2 className="font-semibold" id="resume-work">Resume recent work</h2>
       <Link className="text-link wrap-anywhere" href={resume.href} prefetch={false}>{resume.title || "Untitled"}</Link>
     </section>}
@@ -69,6 +67,5 @@ export default async function Dashboard() {
       <RecentSection type="notes" items={notes} />
       <RecentSection type="references" items={references?.items} />
     </div>
-    <p className="text-sm text-muted-foreground">AI chat is planned for a later build.</p>
   </div>;
 }

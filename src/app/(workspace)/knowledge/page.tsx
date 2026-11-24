@@ -66,7 +66,7 @@ export default async function KnowledgePage({ searchParams }: {
   const date = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
   return <div className="page-wrap space-y-5">
     <header className="page-heading"><h1>Knowledge</h1></header>
-    <KnowledgeSearchForm {...filters} sort={params.sort === "recent" ? "recent" : ""}
+    <KnowledgeSearchForm key={href(filters.view)} {...filters} sort={params.sort === "recent" ? "recent" : ""}
       collections={results.collections} tags={results.tags} filtered={filtered} />
     <nav className="flex flex-wrap gap-2" aria-label="Result view">
       <Link className="secondary-link" aria-current={filters.view === "list" ? "true" : undefined} href={href("list", filters.cursor)}>List view</Link>

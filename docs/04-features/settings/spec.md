@@ -100,7 +100,7 @@ Settings must not call an AI model to read/save preferences. Proposed ordinary r
 | SET-11 | Sign-in while deleting; late chat completion | No replacement account or re-created private data |
 | SET-12 | Keyboard/dialog/mobile/zoom/reduced motion | Reachable labels/actions, visible focus and correct focus return |
 
-Unit tests validate enum/revision/confirmation inputs; database tests cover lifecycle/write races and owner isolation; auth/UI integration tests cover logout, freshness and redirect behavior. No implementation or tests have run. Cosmic initial appearance, System color preference, read-only profile, empty-account re-registration and seven-day operational-metadata retention are approved. Implementation details remain Proposed.
+Unit tests validate enum/revision/confirmation inputs; database tests cover lifecycle/write races and owner isolation; auth/UI integration tests cover logout, freshness and redirect behavior. BUILD-09 includes the Settings UI, account preferences, lifecycle transition, and cleanup worker. See the [implementation checkpoint](../../../PROJECT_STATUS.md) for verification and deployment gates. Cosmic initial appearance, System color preference, read-only profile, empty-account re-registration and seven-day operational-metadata retention are approved. Implementation details remain Proposed.
 
 ## Header theme button
 

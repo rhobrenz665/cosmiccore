@@ -9,6 +9,7 @@
     "build": "next build --webpack",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:process-account-deletions": "node --experimental-strip-types scripts/process-account-deletions.mts",
     "db:check-transactions": "node --experimental-strip-types scripts/check-db-transactions.mts",
     "db:check-ownership": "node --experimental-strip-types scripts/check-db-ownership.mts",
     "db:check-mutations": "node --experimental-strip-types scripts/check-db-mutations.mts",
@@ -19,7 +20,9 @@
     "db:check-acceptance": "node --experimental-strip-types scripts/check-db-acceptance.mts",
     "test:connection-lifecycle": "node --experimental-strip-types --test scripts/connection-lifecycle.test.mts",
     "db:cleanup-acceptance": "node --experimental-strip-types scripts/cleanup-db-acceptance.mts",
-    "db:check-build-05": "node --experimental-strip-types scripts/check-build-05.mts"
+    "db:check-build-05": "node --experimental-strip-types scripts/check-build-05.mts",
+    "test:retrieval-chunks": "node --experimental-strip-types --test scripts/retrieval-chunks.test.mts",
+    "db:check-build-10": "node --env-file=.env.acceptance.local --experimental-strip-types scripts/check-build-10.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

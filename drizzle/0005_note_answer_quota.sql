@@ -1,0 +1,4 @@
+ALTER TABLE "global_quota_usage" DROP CONSTRAINT "global_quota_usage_metric_check";--> statement-breakpoint
+ALTER TABLE "quota_usage" DROP CONSTRAINT "quota_usage_metric_check";--> statement-breakpoint
+ALTER TABLE "global_quota_usage" ADD CONSTRAINT "global_quota_usage_metric_check" CHECK ("global_quota_usage"."metric" in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count', 'note_answers_count'));--> statement-breakpoint
+ALTER TABLE "quota_usage" ADD CONSTRAINT "quota_usage_metric_check" CHECK ("quota_usage"."metric" in ('notes_count', 'notes_bytes', 'references_count', 'references_bytes', 'collections_count', 'tags_count', 'mutations_count', 'note_answers_count'));

@@ -28,6 +28,8 @@ npm run dev
 
 For HTTPS with the default database configuration, use `npm run dev:https`. For the isolated Neon development branch, use `npm run dev:isolated` and open [https://localhost:3000](https://localhost:3000). The isolated launcher requires `.env.acceptance.local` with `COSMICCORE_TEST_PROJECT_ID` and `COSMICCORE_TEST_DATABASE_URL`. It overrides both database URLs for the launched process and uses the existing Google sign-in configuration. Stop any dev server already running in this checkout before launching it.
 
+Run `npm run dev:isolated -- --paired-auth` to use the isolated development branch's own Google Auth endpoint. Account deletion stays disabled in this launcher. The paired endpoint uses separate sign-in sessions and app user mappings.
+
 ## Checks
 
 ```sh

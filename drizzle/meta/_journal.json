@@ -22,6 +22,27 @@
       "when": 1795191955366,
       "tag": "0002_note_export_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795223682673,
+      "tag": "0003_settings_account_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795393608599,
+      "tag": "0004_retrieval_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795478986706,
+      "tag": "0005_note_answer_quota",
+      "breakpoints": true
     }
   ]
 }

@@ -6,5 +6,5 @@ export default auth.middleware({
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/import/markdown/?$|api/exports/notes/?$|api/notes/[^/]+/export/?$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/planet-orbit[.]jpg$|api/import/markdown/?$|api/exports/notes/?$|api/notes/[^/]+/export/?$).*)"],
 };

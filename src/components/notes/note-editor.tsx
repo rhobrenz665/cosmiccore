@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
+import { AskNotePanel } from "./ask-note-panel";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
 import { MAX_BODY_BYTES, MAX_TAGS_PER_NOTE, MAX_TITLE_CODE_POINTS } from "@/lib/notes/rules";
@@ -29,7 +30,8 @@ function sameDraft(left: Draft, right: Draft) {
   return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { noteId: string; initialTitle: string; initialBody: string; initialRevision: number; initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
+export function NoteEditor({ aiEnabled, noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { aiEnabled: boolean; noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
+  initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [acknowledgedDraft, setAcknowledgedDraft] = useState<Draft>(() => canonicalDraft(initialDraft));
@@ -44,6 +46,12 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   const draftRef = useRef(draft);
   const acknowledgedRef = useRef<Draft>(canonicalDraft(draft));
   const revisionRef = useRef(initialRevision);
+  const [savedRevision, setSavedRevision] = useState(initialRevision);
+
+  function trackSavedRevision(revision: number) {
+    revisionRef.current = revision;
+    setSavedRevision(revision);
+  }
   const retryRequestRef = useRef<SaveRequest | null>(null);
   const pumpSaveRef = useRef<() => Promise<void>>(async () => {});
   const inFlightRef = useRef(false);
@@ -110,7 +118,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
 
     retryRequestRef.current = null;
     setHasRetryRequest(false);
-    revisionRef.current = result.revision;
+    trackSavedRevision(result.revision);
     const acknowledged = { title: request.title, body: request.body, collectionId: request.collectionId, tagIds: request.tagIds };
     acknowledgedRef.current = acknowledged;
     setAcknowledgedDraft(acknowledged);
@@ -140,6 +148,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
   useEffect(() => {
     if (saveState.kind === "saved") return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      if (document.documentElement.dataset.signingOut === "true") return;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -158,7 +167,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     setTags(latest.tags);
     conflictRef.current = false;
     retryRequestRef.current = null;
-    revisionRef.current = latest.revision;
+    trackSavedRevision(latest.revision);
     const acknowledged = canonicalDraft(next);
     acknowledgedRef.current = acknowledged;
     setAcknowledgedDraft(acknowledged);
@@ -181,7 +190,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
         tagIds: draftRef.current.tagIds.filter((id) => validTags.has(id)),
       });
     }
-    revisionRef.current = saveState.latest.revision;
+    trackSavedRevision(saveState.latest.revision);
     conflictRef.current = false;
     setSaveState({ kind: "dirty" });
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -195,7 +204,7 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
     ].sort((a, b) => a.displayName.localeCompare(b.displayName)));
     if (action === "delete") {
       if (noteRevision !== undefined) {
-        revisionRef.current = noteRevision;
+        trackSavedRevision(noteRevision);
         if (kind === "collection" && acknowledgedRef.current.collectionId === id) {
           const acknowledged = { ...acknowledgedRef.current, collectionId: null };
           acknowledgedRef.current = acknowledged;
@@ -230,13 +239,13 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
 
   const statusText = saveState.kind === "saved" ? "Saved" : saveState.kind === "dirty" ? "Unsaved changes" : saveState.kind === "saving" ? "Saving…" : saveState.kind === "conflict" ? "Conflict needs your choice" : "Save needs attention";
 
-  return <div className={`note-editor-shell${focusMode ? " note-editor-focus" : ""}`}>
+  return <div data-note-unsaved={saveState.kind !== "saved" || changed} className={`note-editor-shell${focusMode ? " note-editor-focus" : ""}`}>
     <div className="note-editor-topline">
       <div className={`note-editor-status note-save-${saveState.kind}`} role="status" aria-live="polite">{statusText}</div>
-      {focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}
+      <div className="note-editor-actions">{focusMode ? <Button variant="outline" onClick={() => setFocusMode(false)}><X size={15}/> Exit focus mode</Button> : <Button variant="outline" onClick={enterFocusMode}><Focus size={15}/> Focus mode</Button>}
+      <NoteLifecycleButton noteId={noteId} action="trash" getRevision={() => revisionRef.current} disabled={saveState.kind !== "saved" || changed || hasRetryRequest} onLockedChange={(locked) => { lifecycleLockedRef.current = locked; setLifecycleLocked(locked); }}/>
+      </div>
     </div>
-    <NoteLifecycleButton noteId={noteId} action="trash" getRevision={() => revisionRef.current} disabled={saveState.kind !== "saved" || changed || hasRetryRequest} onLockedChange={(locked) => { lifecycleLockedRef.current = locked; setLifecycleLocked(locked); }}/>
-    <p className="note-editor-step-notice">Your note saves automatically after a short pause. Keep this tab open until the status says Saved.</p>
 
     {saveState.kind === "error" && <div className="note-save-error" role="alert"><span>{saveState.message} Your draft is still here.</span>{hasRetryRequest && <Button variant="outline" onClick={() => { void pumpSave(); }}><RotateCw size={14}/> Retry save</Button>}</div>}
     {saveState.kind === "conflict" && <section className="note-conflict-card" aria-labelledby="note-conflict-title">
@@ -282,6 +291,10 @@ export function NoteEditor({ noteId, initialTitle, initialBody, initialRevision,
       </section>}
     </div>
     </fieldset>
+    <div hidden={focusMode}>
+      <AskNotePanel aiEnabled={aiEnabled} noteId={noteId} revision={savedRevision}
+        disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
+    </div>
   </div>;
 }
 
