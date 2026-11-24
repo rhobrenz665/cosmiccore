@@ -626,3 +626,5 @@ Restarted the isolated app with note answers enabled after applying migration 00
 ### BUILD-11 chat history foundation
 
 Started from merged main on `codex/build-11-hosted-chat`. Migration 0006 adds private conversations and turns, constrains each turn to a conversation belonging to the same account, and makes submission IDs unique within a conversation. The account cleanup worker removes chat history during live app data removal. Typecheck and lint passed. The migration is generated and awaits isolated database acceptance. The next slice is authenticated history and submission handling, followed by bounded retrieval, citations, and generation.
+
+Applied migration 0006 to isolated development and wired the chat page to save questions, reopen private conversations, and delete their history. The server checks account ownership, submission replay, and per-account storage limits. Typecheck and lint passed. Hosted generation and browser acceptance are pending.
