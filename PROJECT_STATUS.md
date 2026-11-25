@@ -1,5 +1,13 @@
 # Project status
 
+## Latest checkpoint — BUILD-11 local acceptance — 2026-11-25
+
+**Current mode: testing.** BUILD-11 local acceptance is substantially verified: automated tests (22/22), typecheck, lint, production build, isolated database transaction/ownership/quota/mutation checks, and signed-in Safari checks passed. Safari verified grounded chat/citations, cancellation persistence, a second-account direct-link denial, and a single-note Markdown export/import round trip. The imported synthetic duplicate is in Trash and recoverable through 2026-12-02; the original test fixture remains intact.
+
+Still open: production OAuth/host/provider setup, full authenticated read/write/search/export isolation matrix, bulk export and malformed-import cases, target-host interruption/load checks, complete accessibility review, production cleanup/monitoring/incident recovery, and the owner decision on lexical paraphrase quality and partial-answer recovery. BUILD-05 purge acceptance was not rerun against the populated database because the script's empty-database guard correctly stopped before changing data; its previous clean-database result is retained. See [release readiness](docs/07-deployment/release-readiness.md) and [testing strategy](docs/06-testing/testing-strategy.md).
+
+**Smallest next testing milestone:** finish the remaining local import validation/error cases and bulk-export ownership checks with synthetic test data, then review remaining accessibility items. Do not treat local results as production readiness.
+
 Status: In progress | Updated: 2026-11-25 | Phase: BUILD-11 signed-in acceptance
 
 Latest checkpoint: BUILD-11 is on `codex/build-11-hosted-chat`, based on merged main. Hosted chat now retrieves up to three current indexed sources, validates exact cited passages, persists answers, streams provider progress, supports cancellation, and records reported token counts. Migrations through 0010 are applied in isolated development. Signed-in Safari has verified note/reference answers, mixed-source citations, reload persistence, usage cooldown feedback, cancellation, and cross-account denial. Remaining work includes deciding lexical paraphrase expectations, any partial-output recovery build, and production release gates. See the [implementation backlog](docs/01-product/implementation-backlog.md).
