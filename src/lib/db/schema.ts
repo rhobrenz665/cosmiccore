@@ -276,6 +276,8 @@ export const chatTurns = pgTable("chat_turns", {
   attemptId: uuid("attempt_id"),
   attemptExpiresAt: timestamp("attempt_expires_at", { withTimezone: true }),
   attemptStatus: text("attempt_status"),
+  attemptInputTokens: integer("attempt_input_tokens"),
+  attemptOutputTokens: integer("attempt_output_tokens"),
   citations: jsonb("citations").$type<{ kind: "note" | "reference"; sourceId: string; revision: number }[]>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

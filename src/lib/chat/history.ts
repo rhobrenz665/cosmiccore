@@ -139,7 +139,7 @@ async function runAnswer(conversationId: string, turnId: string, key: string, st
       lt(chatTurns.createdAt, turn.createdAt), sql`${chatTurns.answer} is not null`,
     )).orderBy(desc(chatTurns.createdAt), desc(chatTurns.id)).limit(4);
     await tx.update(chatTurns).set({
-      attemptId, attemptStatus: "active",
+      attemptId, attemptStatus: "active", attemptInputTokens: null, attemptOutputTokens: null,
       attemptExpiresAt: sql`clock_timestamp() + interval '55 seconds'`,
     }).where(and(eq(chatTurns.id, turnId), eq(chatTurns.ownerId, ownerId)));
     return { question: turn.question, sources,
@@ -148,12 +148,18 @@ async function runAnswer(conversationId: string, turnId: string, key: string, st
 
   if ("status" in prepare) return prepare.status;
   let outcome = "unavailable";
+  let attemptInputTokens: number | null = null;
+  let attemptOutputTokens: number | null = null;
+  const measuredStream = stream && { ...stream, onUsage(input: number, output: number) {
+    attemptInputTokens = input;
+    attemptOutputTokens = output;
+  } };
   try {
     outcome = await finishAnswer();
     return outcome;
   } finally {
     await withChatOwner(async (tx, ownerId) => {
-      await tx.update(chatTurns).set({ attemptStatus: outcome, attemptExpiresAt: null }).where(and(
+      await tx.update(chatTurns).set({ attemptStatus: outcome, attemptExpiresAt: null, attemptInputTokens, attemptOutputTokens }).where(and(
         eq(chatTurns.id, turnId), eq(chatTurns.ownerId, ownerId), eq(chatTurns.attemptId, attemptId),
         eq(chatTurns.attemptStatus, "active"),
       ));
@@ -164,7 +170,7 @@ async function runAnswer(conversationId: string, turnId: string, key: string, st
     if (!("sources" in prepare) || !prepare.sources) return "unavailable";
     if (stream?.signal.aborted) return "canceled";
     const { sources, question, previousQuestions } = prepare;
-    const result = await generateChatEvidence(key, question, sources.map(source => source.passage), fetch, stream, previousQuestions);
+    const result = await generateChatEvidence(key, question, sources.map(source => source.passage), fetch, measuredStream, previousQuestions);
     if (stream?.signal.aborted) return "canceled";
     if (result.kind === "rate-limited") return "limited";
     if (result.kind !== "answered") return result.kind;
@@ -188,7 +194,8 @@ async function runAnswer(conversationId: string, turnId: string, key: string, st
       if (bytes + answerBytes > 2 * 1024 * 1024) return "limited";
       if (stream?.signal.aborted) return "canceled";
       const [saved] = await tx.update(chatTurns).set({
-        answer, attemptStatus: "saved", attemptExpiresAt: null, citations: result.indices.map(index => {
+        answer, attemptStatus: "saved", attemptExpiresAt: null, attemptInputTokens, attemptOutputTokens,
+        citations: result.indices.map(index => {
           const { kind, sourceId, revision } = sources[index];
           return { kind, sourceId, revision };
         }),

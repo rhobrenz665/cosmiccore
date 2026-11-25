@@ -642,3 +642,7 @@ Added durable tracking for the latest generation attempt on each turn. Concurren
 ### BUILD-11 signed-in citation acceptance — 2026-11-25
 
 Restored the note indexing control for environments with hosted chat enabled. Safari confirmed it waits for autosave and indexes the latest saved revision. A live Groq answer from a synthetic note displayed a working source link that persisted after reload. Restoring the original note text created a new revision, so the saved answer stayed visible and its citation became unavailable. Typecheck and lint passed. Mixed-source Safari, cancellation and quota feedback, second-account acceptance, and production release checks remain open.
+
+### BUILD-11 provider usage measurement
+
+The chat stream now records Groq-reported prompt and completion counts for the latest attempt. Missing usage stays unknown and does not refund the existing request reservation. A live synthetic streamed answer reported 200 input and 65 output tokens through the implemented parser. Migration 0010 applied in isolated development. Typecheck, lint, and nine focused tests passed. Still open are persisted usage verification through the browser path, partial-output checkpoints, mixed-source Safari acceptance, cancellation and quota feedback, cross-account acceptance, and production release checks.

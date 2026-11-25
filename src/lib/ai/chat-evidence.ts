@@ -2,7 +2,7 @@ import { groqChatEndpoint, groqChatModel } from "./note-answer.ts";
 
 export async function generateChatEvidence(
   key: string, question: string, passages: string[], request = fetch,
-  stream?: { signal: AbortSignal; onProgress: () => void },
+  stream?: { signal: AbortSignal; onProgress: () => void; onUsage?: (input: number, output: number) => void },
   previousQuestions: string[] = [],
 ) {
   if (!question.trim() || question.length > 500 || !passages.length || passages.length > 3 ||
@@ -30,7 +30,7 @@ export async function generateChatEvidence(
     });
     if (response.status === 429) return { kind: "rate-limited" } as const;
     if (!response.ok) return { kind: "unavailable" } as const;
-    const choice = stream ? await readCompletion(response, stream.onProgress) : (await response.json())?.choices?.[0];
+    const choice = stream ? await readCompletion(response, stream) : (await response.json())?.choices?.[0];
     if (choice?.finish_reason !== "stop") return { kind: "unavailable" } as const;
     const { answer, citations } = JSON.parse(choice.message.content);
     if (typeof answer !== "string" || !answer.trim() || !Array.isArray(citations) ||
@@ -50,7 +50,7 @@ export async function generateChatEvidence(
 }
 
 
-async function readCompletion(response: Response, onProgress: () => void) {
+async function readCompletion(response: Response, stream: { onProgress: () => void; onUsage?: (input: number, output: number) => void }) {
   if (!response.body) return null;
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let pending = "";
@@ -71,13 +71,20 @@ async function readCompletion(response: Response, onProgress: () => void) {
         if (data === "[DONE]") {
           return { finish_reason: finishReason, message: { content } };
         }
-        const choice = JSON.parse(data)?.choices?.[0];
+        const frame = JSON.parse(data);
+        const usage = frame.usage ?? frame.x_groq?.usage;
+        if (Number.isSafeInteger(usage?.prompt_tokens) && usage.prompt_tokens >= 0 &&
+            Number.isSafeInteger(usage?.completion_tokens) && usage.completion_tokens >= 0 &&
+            usage.prompt_tokens <= 2_147_483_647 && usage.completion_tokens <= 2_147_483_647) {
+          stream.onUsage?.(usage.prompt_tokens, usage.completion_tokens);
+        }
+        const choice = frame.choices?.[0];
         if (typeof choice?.delta?.content === "string") {
           content += choice.delta.content;
           if (content.length > 16_384) return null;
           if (!announced && content) {
             announced = true;
-            onProgress();
+            stream.onProgress();
           }
         }
         if (choice?.finish_reason) finishReason = choice.finish_reason;
