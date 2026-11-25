@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Focus, PencilLine, RotateCw, X } from "lucide-react";
+import { SourceIndexStatus } from "@/components/retrieval/source-index-status";
 import { AskNotePanel } from "./ask-note-panel";
 import { Button } from "@/components/ui/button";
 import { saveNoteAction } from "@/app/(workspace)/notes/actions";
@@ -30,7 +31,7 @@ function sameDraft(left: Draft, right: Draft) {
   return a.title === b.title && a.body === b.body && a.collectionId === b.collectionId && a.tagIds.join("\0") === b.tagIds.join("\0");
 }
 
-export function NoteEditor({ aiEnabled, noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { aiEnabled: boolean; noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
+export function NoteEditor({ aiEnabled, chatEnabled, indexedRevision, noteId, initialTitle, initialBody, initialRevision, initialCollectionId, initialTagIds, collections: initialCollections, tags: initialTags }: { aiEnabled: boolean; chatEnabled: boolean; indexedRevision?: number | null; noteId: string; initialTitle: string; initialBody: string; initialRevision: number;
   initialCollectionId: string | null; initialTagIds: string[]; collections: OrganizationOption[]; tags: OrganizationOption[] }) {
   const initialDraft = { title: initialTitle, body: initialBody, collectionId: initialCollectionId, tagIds: initialTagIds };
   const [draft, setDraft] = useState<Draft>(initialDraft);
@@ -292,6 +293,8 @@ export function NoteEditor({ aiEnabled, noteId, initialTitle, initialBody, initi
     </div>
     </fieldset>
     <div hidden={focusMode}>
+      {chatEnabled && <SourceIndexStatus source={{ kind: "note", id: noteId }} revision={savedRevision}
+        initialIndexedRevision={indexedRevision} disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />}
       <AskNotePanel aiEnabled={aiEnabled} noteId={noteId} revision={savedRevision}
         disabled={saveState.kind !== "saved" || changed || lifecycleLocked} />
     </div>
