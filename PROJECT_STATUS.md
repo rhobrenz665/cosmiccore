@@ -1,8 +1,8 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-21 | Phase: BUILD-09 migrated to isolated development
+Status: In progress | Updated: 2026-11-25 | Phase: BUILD-11 signed-in acceptance
 
-Latest checkpoint: BUILD-09 is on `codex/build-09-settings-account`, based on `origin/main` after the BUILD-08 merge. Settings, the deletion workflow and its operator worker are implemented. The migration is applied on isolated `cosmiccore_dev`. Account deletion remains disabled pending signed-in and provider acceptance. See the [implementation backlog](docs/01-product/implementation-backlog.md).
+Latest checkpoint: BUILD-11 is on `codex/build-11-hosted-chat`, based on merged main. Hosted chat now retrieves up to three current indexed sources, validates exact cited passages, persists answers, streams provider progress, supports cancellation, and records reported token counts. Migrations through 0010 are applied in isolated development. Signed-in Safari has verified note/reference answers, mixed-source citations, reload persistence, and usage cooldown feedback. Remaining acceptance includes browser cancellation, second-account isolation, partial-output recovery, and production release gates. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -645,4 +645,10 @@ Restored the note indexing control for environments with hosted chat enabled. Sa
 
 ### BUILD-11 provider usage measurement
 
-The chat stream now records Groq-reported prompt and completion counts for the latest attempt. Missing usage stays unknown and does not refund the existing request reservation. A live synthetic streamed answer reported 200 input and 65 output tokens through the implemented parser. Migration 0010 applied in isolated development. Typecheck, lint, and nine focused tests passed. Still open are persisted usage verification through the browser path, partial-output checkpoints, mixed-source Safari acceptance, cancellation and quota feedback, cross-account acceptance, and production release checks.
+The chat stream now records Groq-reported prompt and completion counts for the latest attempt. Missing usage stays unknown and does not refund the existing request reservation. A live synthetic streamed answer reported 200 input and 65 output tokens through the implemented parser. Migration 0010 applied in isolated development. Typecheck, lint, and nine focused tests passed. Still open are persisted token-usage verification through the browser path, partial-output checkpoints, browser cancellation, cross-account acceptance, and production release checks.
+
+### BUILD-11 Safari and local acceptance update — 2026-11-25
+
+Safari verified that a mixed synthetic note/reference question returned both matching source links and remained readable after reload. A direct synthetic-reference question returned an exact cited passage and remained persisted after reload. A rapid follow-up displayed the shared AI usage limit; after the cooldown, another direct query succeeded. A first broad wording was declined for insufficient evidence, while direct wording succeeded; this is recorded as an observed model/evidence behavior, not a retrieval outage. Browser cancellation was not completed because the short local Groq response finished before Safari's Stop control could be clicked. The four focused chat evidence tests passed, including upstream abort propagation and rejection of an incomplete stream. Typecheck, lint, and optimized production build passed. Second-account browser isolation remains unverified because no separate signed-in test account was available. Partial-output checkpoints and production release checks remain open.
+
+Next smallest milestone: complete a browser ownership/isolation pass with a second test account, then decide whether durable partial-output checkpoints are required for MVP; keep production release blocked on the remaining release gates.
