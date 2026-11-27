@@ -4,7 +4,7 @@
 
 Production Google sign-in passed after credential rotation. The production migration journal contains all 11 migrations through 0010. With temporary global limits configured, Safari verified note creation, autosave after reload, Knowledge search and a single-note Markdown download. Signed-out users were redirected from protected pages and received 401 for export endpoints. A second signed-in account could not find, open or individually export the synthetic test note, and its ZIP excluded that note.
 
-Hosted AI is confirmed in release scope. Production Chat reported that answers were unavailable. Configure the production Groq key and both feature flags in Vercel, redeploy, and verify consent, grounded responses, citations and account isolation. The one-time database reset and fresh migration remain pending until production acceptance passes. See [release readiness](docs/07-deployment/release-readiness.md).
+Hosted AI is enabled in production. Safari verified default unchecked consent in Notes and Chat, a grounded note answer with its excerpt, a chat refusal before indexing, and a grounded chat answer with a citation after indexing, including persistence after reload. A second signed-in account received Conversation unavailable from the owner’s direct chat link. A separate grounded retrieval attempt under the second account remains unverified. The one-time database reset and fresh migration remain pending confirmation of which existing records can be discarded. See [release readiness](docs/07-deployment/release-readiness.md).
 
 ## Local release testing — 2026-11-27
 
