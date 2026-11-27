@@ -1,14 +1,12 @@
 # Project status
 
-## Latest checkpoint — BUILD-11 local acceptance — 2026-11-25
+## Latest checkpoint — local release testing — 2026-11-27
 
-**Current mode: testing.** BUILD-11 local acceptance is substantially verified: automated tests (30/30), typecheck, lint, production build, isolated database transaction/ownership/quota/mutation checks, and signed-in Safari checks passed. Safari verified grounded chat/citations, cancellation persistence, a second-account direct-link denial, a single-note Markdown export/import round trip, and a valid active-note ZIP excluding Trash. Regression tests cover import limits/validation and ZIP structure/interruption. At 320px, dashboard/editor and mobile More navigation remained usable. The imported synthetic duplicate is in Trash and recoverable through 2026-12-02; the original test fixture remains intact.
+**Current mode: release verification.** GitHub `development` is the integration branch. Reviewed changes advance to `main` for production. Settings now explains what chat and note answers send to Groq. All 30 automated tests, lint, the optimized build, and typecheck passed on 2026-11-27.
 
-Still open: production OAuth/host/provider setup, full authenticated read/write/search/export isolation matrix, malformed multipart and archive-limit cases, target-host load checks, complete accessibility review (including one low-priority `transition-all` styling finding), production cleanup/monitoring/incident recovery, and the owner decision on lexical paraphrase quality and partial-answer recovery. BUILD-05 purge acceptance was not rerun against the populated database because the script's empty-database guard correctly stopped before changing data; its previous clean-database result is retained. See [release readiness](docs/07-deployment/release-readiness.md) and [testing strategy](docs/06-testing/testing-strategy.md).
+**Remaining:** signed-in verification of the updated Settings notice and consent flow, production hosting and isolated Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
 
-**Smallest next testing milestone:** run bulk export as a second explicitly disposable synthetic account and exercise malformed multipart/archive-boundary responses, then complete keyboard/screen-reader/contrast checks. Do not treat local results as production readiness.
-
-Status: In progress | Updated: 2026-11-25 | Phase: BUILD-11 signed-in acceptance
+Status: In progress | Updated: 2026-11-27 | Phase: build/setup planning
 
 Latest checkpoint: BUILD-11 is on `codex/build-11-hosted-chat`, based on merged main. Hosted chat now retrieves up to three current indexed sources, validates exact cited passages, persists answers, streams provider progress, supports cancellation, and records reported token counts. Migrations through 0010 are applied in isolated development. Signed-in Safari has verified note/reference answers, mixed-source citations, reload persistence, usage cooldown feedback, cancellation, and cross-account denial. Remaining work includes deciding lexical paraphrase expectations, any partial-output recovery build, and production release gates. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 

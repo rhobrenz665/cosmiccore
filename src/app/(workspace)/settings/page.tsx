@@ -33,7 +33,7 @@ export default async function Settings({ searchParams }: {
     </section>
     <section className="space-y-2 rounded-xl border border-border bg-card p-4" aria-labelledby="privacy-settings">
       <h2 id="privacy-settings" className="text-lg font-semibold">Privacy</h2>
-      <p className="text-sm">AI chat is planned for a later build. Your knowledge is currently used within your private workspace.</p>
+      <p className="text-sm">When hosted AI is available, you choose whether to send content to Groq. Chat sends your question, up to four earlier questions, and up to three matching passages from your workspace. Asking for an AI answer from a note sends your question and a matching excerpt from that note.</p>
     </section>
     {params.deletionError === "1" && <p role="alert">Google confirmation did not complete. You can start again below.</p>}
     <AccountDeletion enabled={process.env.COSMICCORE_ACCOUNT_DELETION_ENABLED === "true"} returning={params.confirmDeletion === "1"} />
