@@ -6,7 +6,9 @@
 
 **Safari:** The signed-in test account showed the updated Settings disclosure. The existing test conversation showed matching Groq consent wording with the checkbox unchecked by default.
 
-**Remaining:** Production hosting and isolated Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
+**Production target identified:** Safari confirmed the CosmicCore Neon project (`sparkling-band-70816389`), default branch `main` (`br-nameless-pond-a1kuek3d`). The development database is in a separate project.
+
+**Remaining:** Link the production host, verify Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
 
 Status: In progress | Updated: 2026-11-27 | Phase: build/setup planning
 
