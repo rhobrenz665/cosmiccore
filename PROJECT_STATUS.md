@@ -4,7 +4,9 @@
 
 **Current mode: release verification.** GitHub `development` is the integration branch. Reviewed changes advance to `main` for production. Settings now explains what chat and note answers send to Groq. All 30 automated tests, lint, the optimized build, and typecheck passed on 2026-11-27.
 
-**Remaining:** signed-in verification of the updated Settings notice and consent flow, production hosting and isolated Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
+**Safari:** The signed-in test account showed the updated Settings disclosure. The existing test conversation showed matching Groq consent wording with the checkbox unchecked by default.
+
+**Remaining:** Production hosting and isolated Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
 
 Status: In progress | Updated: 2026-11-27 | Phase: build/setup planning
 
