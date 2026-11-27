@@ -1,21 +1,21 @@
 # Release readiness gates
 
-Status: Proposed — none verified by a running application
+Status: In progress — local BUILD-11 checks pass; privacy disclosure and production acceptance remain open | Updated: 2026-11-27
 
 | Gate | Required evidence | Current state |
 |---|---|---|
-| Product baseline | Reviewed PRD, workflows, scope and first-feature specification | Overall review draft prepared; feature detail pending |
-| Public Google auth | Own production OAuth configuration; callback/origin/session/logout tests; no invite restriction | Provider integration unselected |
-| Isolation | Two-account denial tests for read/write/search/export/RAG/citations and cross-owner joins | Not implemented |
-| Capture reliability | Reload durability, concurrent-edit conflict, stale-delete and interrupted save tests | Not implemented |
-| Data portability | UTF-8 import validation, owner-only bounded export and restore expectations | Export packaging/limits pending |
-| AI completeness | Selected free provider, privacy disclosure, evaluated retrieval/support/citations, failure handling | Blocked on provider feasibility |
-| Spending/abuse | User/global atomic quotas, provider resource limits, kill switch, exhaustion behavior and load measurement | Account caps are coded; global values and verified provider headroom remain pending; see [BUILD-03 operational gates](build-03-operational-gates.md) |
-| Accessibility | Keyboard, screen-reader labels, contrast, mobile, zoom, reduced motion and all appearances | Wireframes/implementation pending |
-| Deployment | Isolated previews, reviewed migration, eligible hosting, secret protection, build/checks | No infrastructure |
-| Deletion/privacy | Tested 7-day note Trash/restore/expiry, account access blocking and bounded live-data cleanup | Policies confirmed; implementation and remaining history policy pending |
+| Product baseline | Reviewed PRD, workflows, scope and first-feature specification | Review package exists; lexical paraphrase threshold and partial-output checkpoint scope still need an owner decision |
+| Public Google auth | Own production OAuth configuration; callback/origin/session/logout tests; no invite restriction | Local Google sign-in and sequential test-account switching work. Production OAuth origins, credentials, session expiry/revocation, and host terms are unverified |
+| Isolation | Two-account denial tests for read/write/search/export/RAG/citations and cross-owner joins | Safari new-account checks denied direct access to a prior account's chat, note, and reference. Isolated DB checks passed ownership joins and retrieval filtering. A full authenticated read/write/search/export matrix remains incomplete |
+| Capture reliability | Reload durability, concurrent-edit conflict, stale-delete and interrupted save tests | Prior BUILD-04 local acceptance covers autosave/reload, stale conflicts, and database quota/retry races. Target-host interruption behavior remains unverified |
+| Data portability | UTF-8 import validation, owner-only bounded export and restore expectations | Local Safari verified a single-note round trip and valid active-note ZIP containing the account's one active synthetic note; the trashed copy was excluded. Import checks rejected wrong extension, invalid UTF-8, NUL, and a file over 256 KiB. Full two-account export denial, malformed multipart, archive limits, metadata fidelity, and interrupted-download behavior remain unverified |
+| AI completeness | Selected free provider, accurate privacy disclosure, evaluated retrieval/support/citations, failure handling | Synthetic hosted answers, exact citations, mixed sources, stale-link handling, refusal, cooldown, and browser Stop persistence passed locally. Settings now explains which content is sent to Groq and that users choose whether to send it. Signed-in Safari verified the disclosure and the unchecked chat consent control. The lexical diagnostic matched 0/3 paraphrase cases. Provider terms/limits, latency, and failure headroom remain unverified |
+| Spending/abuse | User/global atomic quotas, provider resource limits, kill switch, exhaustion behavior and load measurement | Isolated account/global reservation races and chat cooldown/daily caps passed. Production capacity values, provider headroom, load behavior, and deployed kill-switch verification remain open; see [BUILD-03 operational gates](build-03-operational-gates.md) |
+| Accessibility | Keyboard, screen-reader labels, contrast, mobile, zoom, reduced motion and all appearances | Safari 320px dashboard/editor and mobile More navigation checks passed. Full screen-reader, contrast, keyboard-complete, zoom, reduced-motion, and appearance-matrix review remains open. Source review found a low-priority `transition-all` in the shared button base |
+| Deployment | Isolated previews, reviewed migration, eligible hosting, secret protection, build/checks | Local typecheck, lint, and production build pass; migration 0010 is applied to isolated development. Requested flow is local → GitHub `development` → reviewed promotion to `main` (production); `development` exists on GitHub. Deployment automation and the production database and hosting targets are pending |
+| Deletion/privacy | Tested 7-day note Trash/restore/expiry, account access blocking and bounded live-data cleanup | Earlier isolated BUILD-05 Trash/purge acceptance passed. Account deletion remains disabled/unverified; current chat/source retention behavior is implemented, but production cleanup execution is not verified |
 | Disaster recovery (future) | Independent backups, expiry, restore drill and deletion reconciliation | Deferred by owner; not an MVP release gate |
-| Operations | Metadata-only logs, receipt/rate cleanup, role separation, usage/error monitoring and basic incident/rollback runbook | Cleanup schedule and DB privileges unverified; see [BUILD-03 operational gates](build-03-operational-gates.md) |
+| Operations | Metadata-only logs, receipt/rate cleanup, role separation, usage/error monitoring and basic incident/rollback runbook | Cleanup schedule, DB role separation, deployed monitoring/alerts, and incident/rollback runbook remain unverified; see [BUILD-03 operational gates](build-03-operational-gates.md) |
 
 ## Release stages
 
@@ -27,7 +27,7 @@ Public registration is the approved product direction. Capacity limits and hones
 
 ## Lifecycle and maintenance planning
 
-See [account lifecycle](../03-technical/account-lifecycle.md) for Proposed deletion/history policies, and [backup/cleanup feasibility](backup-and-cleanup-plan.md) for validated tool capabilities and remaining operational gaps. Immediate logical expiry is distinct from delayed physical purge. The 24-hour RPO remains unverified until the backup/restore workflow is tested.
+See [account lifecycle](../03-technical/account-lifecycle.md) for approved deletion/history policies, and [backup/cleanup feasibility](backup-and-cleanup-plan.md) for remaining operational gaps. Application-managed backup and disaster recovery are deferred outside MVP; no 24-hour RPO guarantee is claimed.
 
 ## Approved account and backup policies — 2026-11-10
 
@@ -36,3 +36,21 @@ Confirmed account deletion blocks access immediately and targets removal of live
 ## Current scope decision — 2026-11-10
 
 Owner deferred application-managed backups and disaster recovery to a future milestone, outside MVP. Backup hosting remains undecided; no service is selected. The approved 24-hour RPO and seven-day encrypted backup retention apply to that future capability, not MVP guarantees or release gates. Existing provider history is incidental, not a promised recovery service. MVP keeps Markdown import/export, seven-day note Trash/restore, immediate account-deletion access blocking and live-data removal targeted within seven days. Cleanup required for those features remains in scope. This decision supersedes earlier backup/restore release gates in this document. No disaster-recovery guarantee is offered for MVP.
+
+## Local acceptance update — 2026-11-25
+
+The full automated suite passed (30 tests). Isolated transaction, owner-isolation, mutation/race, shared-quota, retrieval/revision, and chat acceptance checks passed. Signed-in Safari verified mixed-source answers and persistence, usage feedback, Stop cancellation with no saved answer, denial of cross-account links to a conversation, note, and reference, a basic single-note Markdown export/import round trip, and an active-note ZIP with Trash excluded. Local import tests cover extension, UTF-8, binary controls, exact/over size boundaries, and filename safety; ZIP tests cover entry structure, Unicode body, interruption and deadline behavior. At 320px, dashboard/editor and mobile More navigation remained usable. The imported duplicate was moved to Trash (restorable for seven days); the original fixture remains intact. Token counts persisted for a successful answer. Typecheck, lint, and optimized production build passed.
+
+The BUILD-05 purge script was not rerun on the populated acceptance database: its initial guard requires zero existing notes and quota rows before exercising a database-wide purge. It stopped before creating fixtures or invoking purge and changed no rows. The previous clean-database BUILD-05 acceptance result remains documented in [the build plan](../03-technical/build-05-step-plan.md).
+
+This evidence supports local MVP verification only. Production OAuth, host/deployment configuration, provider/account limits, production cleanup scheduling, monitoring and operational recovery remain open. The lexical paraphrase result is a product-quality decision, not a passing recall claim.
+
+## Retest and disclosure finding — 2026-11-27
+
+The 30-test suite, lint, typecheck, and optimized build passed again. Safari confirmed the synthetic account and canceled-answer state remain intact. Settings currently claims “AI chat is planned for a later build,” which is inaccurate: hosted chat and explicit Groq consent are active. Correct the privacy disclosure and verify it against the provider data flow before any deployment. Settings also correctly reports account deletion unavailable in the local environment; provider-backed deletion remains a production gate. No production hosting target/configuration has been selected or verified.
+
+## Environment and promotion request — 2026-11-27
+
+The owner requested local → development → production, with a one-time clean production reset after production testing passes. GitHub has an existing `main`; the current tested checkout is 15 commits ahead of remote `main`, and the current feature branch is not listed on GitHub. Neon access exposes only `cosmiccore-dev` with its `development` branch; the separate project referenced by the local app configuration is not visible in the connected Neon account. No production environment is created or changed. Proposed interpretation: use GitHub `development` for integration and promote through a reviewed PR to `main`; use separate Neon development and production environments. Production host, Neon project, migration credentials, deployment automation, and branch protections remain unresolved.
+
+The Settings disclosure was corrected on 2026-11-27 and checked against the chat and note consent controls in source. All 30 automated tests, lint, the optimized build, and typecheck passed after the change.

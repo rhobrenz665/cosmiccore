@@ -1,6 +1,6 @@
 # Testing strategy
 
-Status: Draft
+Status: Active — local BUILD-11 checks are recorded; target-host and full release acceptance remain open | Updated: 2026-11-27
 
 Future implementation: unit tests for validation, chunk/version and quota rules; integration tests against isolated PostgreSQL for ownership, transactions, conflicts and deletion; end-to-end tests for sign-in/capture/search/export/chat. Use two accounts to test IDOR across every record, search, source and conversation path.
 
@@ -8,7 +8,23 @@ AI evaluation: small curated question/source set including irrelevant sources, n
 
 Exercise interrupted streams, provider 429/timeout, retry idempotency, browser reload during save, concurrent editors, quota races and indexing retries. Verify keyboard/mobile and all appearance/color combinations; test reduced motion and contrast. Validate Markdown export/import fidelity for MVP. Independent database-backup restore drills belong to the future backup milestone.
 
-Planning verification: check Markdown links and document status/scope consistency. No application test suite is appropriate yet.
+## Current local results — 2026-11-27
+
+`node --experimental-strip-types --test scripts/*.test.mts` passed all 30 tests, covering chat evidence/cancellation, connection cleanup, mutation rules, note answers and passage selection, retrieval chunking, Markdown validation/filename safety, ZIP structure, and ZIP stream cancellation/deadlines. `npm run typecheck`, `npm run lint`, and `npm run build` passed.
+
+Isolated development database checks passed for transaction rollback, owner isolation, blocked-account denial, mutation receipts and races, account/global quota reservations, retrieval ownership/revision behavior, note-answer quota cooldown/daily caps, and BUILD-10 search cases. Signed-in Safari verified successful grounded answers, saved citations, mixed-source retrieval, cooldown feedback, Stop behavior after reload, and direct-link denial for a second account.
+
+Safari also completed a Markdown portability round trip with the synthetic `verify punk` account: exported the saved 548-byte note, imported the `.md` file, and confirmed the imported title and body in the notes list. The imported duplicate was moved to Trash and is recoverable until 2026-12-02; the original fixture remains intact. This verifies one basic local note round trip; it does not establish collection/tag metadata fidelity or cross-account export denial.
+
+Follow-up local BUILD-08 checks passed: the active-note ZIP downloaded as a valid archive containing exactly the account's active synthetic note; the trashed imported duplicate was excluded. Direct import-validator checks passed for Unicode Markdown, wrong extension, invalid UTF-8, binary controls, and the exact/over 256 KiB boundary. Automated checks also cover safe filenames, ZIP entry structure, and stream cancellation/deadlines. These checks do not establish a two-account bulk-export denial matrix, malformed multipart handling, metadata fidelity, archive-limit behavior, or interrupted browser-download recovery.
+
+Safari responsive review at 320px found the dashboard and note editor usable with the mobile navigation; the More menu links were accessible and focus moved into the opened menu. The UI source review found one non-blocking polish issue: the shared shadcn button base uses `transition-all` (`src/components/ui/button.tsx:6`). Screen-reader, contrast, keyboard-complete, zoom, reduced-motion, and appearance-combination review remains open.
+
+The BUILD-10 diagnostic lexical sample returned 0/3 paraphrase matches despite passing its exact/question/no-match assertions. This is not a tested semantic-search capability; decide whether paraphrases are an MVP acceptance requirement before changing retrieval. A BUILD-05 purge rerun safely stopped at its empty-database guard because the acceptance database already contained records; prior clean-database acceptance remains documented in the build plan.
+
+The automated suite (30/30), lint, typecheck, and optimized production build were rerun on 2026-11-27 and passed. Safari confirmed the `verify punk` account remains signed in and its canceled chat has no persisted answer. The Settings screen currently contains an outdated privacy notice saying AI chat is planned; correct and verify this disclosure before any production run. No production host or configuration is selected in the repository.
+
+Still unverified: production OAuth/host setup, the full authenticated data-portability matrix, target-host interruption/load behavior, complete accessibility review, account deletion in the provider-backed environment, cleanup scheduling, monitoring and operational recovery. Treat local green checks as local evidence, not production readiness.
 
 ## First workflow specification
 

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
 import {
-  accountDeletionIntents, accountDeletionJobs, appUsers, collections, globalQuotaUsage,
+  accountDeletionIntents, accountDeletionJobs, appUsers, chatConversations, collections, globalQuotaUsage,
   mutationReceipts, noteExportUsage, notes, quotaUsage, references, tags,
 } from "../db/schema.ts";
 import type { DbTransaction } from "../db/transaction-session.ts";
@@ -75,6 +75,7 @@ export async function processAccountDeletions(
             if (!changed) throw new Error("Quota reconciliation failed.");
           }
           // Existing FK cascades remove note/reference links and tag edges.
+          await tx.delete(chatConversations).where(eq(chatConversations.ownerId, ownerId));
           await tx.delete(notes).where(eq(notes.ownerId, ownerId));
           await tx.delete(references).where(eq(references.ownerId, ownerId));
           await tx.delete(collections).where(eq(collections.ownerId, ownerId));

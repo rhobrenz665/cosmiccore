@@ -1,8 +1,18 @@
 # Project status
 
-Status: In progress | Updated: 2026-11-21 | Phase: BUILD-09 migrated to isolated development
+## Latest checkpoint — local release testing — 2026-11-27
 
-Latest checkpoint: BUILD-09 is on `codex/build-09-settings-account`, based on `origin/main` after the BUILD-08 merge. Settings, the deletion workflow and its operator worker are implemented. The migration is applied on isolated `cosmiccore_dev`. Account deletion remains disabled pending signed-in and provider acceptance. See the [implementation backlog](docs/01-product/implementation-backlog.md).
+**Current mode: release verification.** GitHub `development` is the integration branch. Reviewed changes advance to `main` for production. Settings now explains what chat and note answers send to Groq. All 30 automated tests, lint, the optimized build, and typecheck passed on 2026-11-27.
+
+**Safari:** The signed-in test account showed the updated Settings disclosure. The existing test conversation showed matching Groq consent wording with the checkbox unchecked by default.
+
+**Production target identified:** Safari confirmed the CosmicCore Neon project (`sparkling-band-70816389`), default branch `main` (`br-nameless-pond-a1kuek3d`). The development database is in a separate project.
+
+**Remaining:** Link the production host, verify Neon/Auth configuration, and the outstanding acceptance checks in [release readiness](docs/07-deployment/release-readiness.md). The one-time production database reset and fresh migration follow successful production testing.
+
+Status: In progress | Updated: 2026-11-27 | Phase: build/setup planning
+
+Latest checkpoint: BUILD-11 is on `codex/build-11-hosted-chat`, based on merged main. Hosted chat now retrieves up to three current indexed sources, validates exact cited passages, persists answers, streams provider progress, supports cancellation, and records reported token counts. Migrations through 0010 are applied in isolated development. Signed-in Safari has verified note/reference answers, mixed-source citations, reload persistence, usage cooldown feedback, cancellation, and cross-account denial. Remaining work includes deciding lexical paraphrase expectations, any partial-output recovery build, and production release gates. See the [implementation backlog](docs/01-product/implementation-backlog.md).
 
 ## Completed this session
 
@@ -622,3 +632,41 @@ Live synthetic verification initially caught inconsistent weather refusal and an
 ### Note AI Safari end-to-end check — 2026-11-24
 
 Restarted the isolated app with note answers enabled after applying migration 0005. Signed-in Safari opt-in sent the synthetic question “Where are the invoices?” with the saved excerpt “The invoices are in the blue folder.” Groq returned “In the blue folder.” and the editor displayed the source excerpt. Restored the original test note and confirmed it saved. API key remains local in ignored `.env.local`. The example configuration defaults the AI feature on for a configured deployment, while runtime still requires a key.
+
+### BUILD-11 chat history foundation
+
+Started from merged main on `codex/build-11-hosted-chat`. Migration 0006 adds private conversations and turns, constrains each turn to a conversation belonging to the same account, and makes submission IDs unique within a conversation. The account cleanup worker removes chat history during live app data removal. Typecheck and lint passed. The migration is generated and awaits isolated database acceptance. The next slice is authenticated history and submission handling, followed by bounded retrieval, citations, and generation.
+
+Applied migration 0006 to isolated development and wired the chat page to save questions, reopen private conversations, and delete their history. The server checks account ownership, submission replay, and per-account storage limits. Typecheck and lint passed. Hosted generation and browser acceptance are pending.
+
+Signed-in Safari verified that a saved chat question persists after reopening the conversation and reloading. The first hosted chat slice adds per-question Groq consent, one passage from current indexed notes or references, the existing shared AI quotas, and a saved answer with a source link that is checked against the current source revision. Migration 0007 is generated. Typecheck and lint passed. The feature flag defaults off. Isolated migration and signed-in generation, multi-source answers, streaming, and cancellation remain pending.
+
+Migration 0007 applied successfully to isolated development. Restarted the paired local server with hosted chat enabled. Signed-in Safari verified that the consent checkbox is required and that a synthetic question without a matching source produces the insufficient-evidence message. Positive note and reference answers, persisted source links, stale-source handling, quota feedback, second-account verification, multi-source answers, streaming, and cancellation remain open.
+
+Chat now sends up to three distinct indexed passages and records only references whose quoted text matches a supplied passage. Links are rechecked against source ownership and revision on reload. Existing single-source answers remain readable. Migration 0008 applied in isolated development. Focused tests covered valid multi-source citations and fabricated quotes. A live synthetic Groq call combined both passages and cited both. Typecheck and lint passed. Signed-in citation and lifecycle verification, second-account checks, streaming, and cancellation remain open.
+
+Added a streamed chat answer endpoint and Stop generation control. The browser receives progress while Groq streams. The final answer appears after citation validation and persistence. Cancellation aborts the upstream request and skips persistence when observed before the write. Nine focused tests passed, including upstream cancellation and an incomplete provider stream. A live synthetic Groq stream returned both citations. Typecheck, lint, and production build passed. Signed-in browser checks for the new route, cancellation, persisted citations, stale sources, quota feedback, and second-account isolation remain open. Durable attempt tracking and context from previous turns remain outstanding.
+
+Added durable tracking for the latest generation attempt on each turn. Concurrent requests from the same account are serialized, expired attempts show as interrupted after reload, and a superseded attempt cannot publish an answer. With consent, up to four bounded earlier questions help interpret the current question. Retrieved passages remain the evidence for the answer. Migration 0009 applied in isolated development. Typecheck, lint, and nine focused tests passed. Signed-in lifecycle, quota feedback, and second-account checks remain pending.
+
+### BUILD-11 signed-in citation acceptance — 2026-11-25
+
+Restored the note indexing control for environments with hosted chat enabled. Safari confirmed it waits for autosave and indexes the latest saved revision. A live Groq answer from a synthetic note displayed a working source link that persisted after reload. Restoring the original note text created a new revision, so the saved answer stayed visible and its citation became unavailable. Typecheck and lint passed. Mixed-source Safari, cancellation and quota feedback, second-account acceptance, and production release checks remain open.
+
+### BUILD-11 provider usage measurement
+
+The chat stream now records Groq-reported prompt and completion counts for the latest attempt. Missing usage stays unknown and does not refund the existing request reservation. A live synthetic streamed answer reported 200 input and 65 output tokens through the implemented parser. Migration 0010 applied in isolated development. Typecheck, lint, and nine focused tests passed. Follow-up browser verification later confirmed 205 input and 67 output tokens persisted with one citation. Partial-output checkpoints and production release checks remain open.
+
+### BUILD-11 Safari and local acceptance update — 2026-11-25
+
+Safari verified a mixed synthetic note/reference answer with both matching source links and reload persistence. A direct synthetic-reference answer with an exact citation also persisted after reload. A rapid follow-up displayed the shared AI usage limit; after the cooldown, another direct query succeeded. One broad wording was initially declined for insufficient evidence, while a direct question succeeded. The remaining signed-in checks and the observed lexical paraphrase gap are recorded below. Partial-output checkpoints and production release checks remain open.
+
+### BUILD-11 remaining signed-in acceptance — 2026-11-25
+
+In Safari, the new `verify punk` test account had empty dashboard, notes, references, and chat history. Direct links to the first account's synthetic conversation, note, and reference returned unavailable states without exposing their content. The original account was signed out when the new account was added, so checks were performed sequentially. A synthetic note and one question remain in the test account for review.
+
+The Stop control was exercised on a streamed answer request. After reload, the question remained, the UI showed “Stopped waiting for the answer,” and a read-only database check reported `attemptStatus=canceled`, no saved answer, and no usage values for the canceled attempt. The separate successful synthetic reference answer persisted one citation with 205 input and 67 output tokens.
+
+Rollback-only database acceptance passed shared quota reservation, cooldown and daily caps. BUILD-10 retrieval acceptance passed its asserted owner isolation, current-revision, Trash/restore, deletion-cascade and rollback cases. Its diagnostic lexical sample scored exact 12/12, question 6/6, no-match 3/3, and paraphrase 0/3; the script does not gate on paraphrase, so this is a search-quality gap to decide rather than a reported script failure. Four focused chat evidence tests, typecheck, lint and the optimized production build passed.
+
+Next smallest milestone: agree whether lexical paraphrases belong in MVP and add an explicit success threshold if they do. Then decide whether partial-output checkpoints are needed and complete production-specific release checks before any deployment.
